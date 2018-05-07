@@ -129,7 +129,7 @@ public class IMAPDemo {
 			e.printStackTrace();
 			//continue;
 		}
-		return "";
+		return "nothing found";
 	}
 	static String makeSubjectLine(Message m) throws Exception
 	{
