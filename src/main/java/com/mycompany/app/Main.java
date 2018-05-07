@@ -53,14 +53,14 @@ public class Main{
 		//SlackChannel channel = session.findChannelByName("general"); //make sure bot is a member of the channel.
 		//session.sendMessage(channel, "hi im a bot" );
 
-    System.out.println("users");
+    /*System.out.println("users");
     for(SlackUser su : session.getUsers())
       System.out.println("\t"+su.toString());
     System.out.println("bots");
     for(SlackBot su : session.getBots())
       System.out.println("\t"+su.toString());
     sb = session.findUserById("UAKCACQKC");
-    System.out.println("\tbot: "+sb.toString());
+    System.out.println("\tbot: "+sb.toString());*/
 
 		registeringAListener(session);
 		for(;;);
