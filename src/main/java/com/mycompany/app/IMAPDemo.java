@@ -1,5 +1,6 @@
 package com.mycompany.app;
 
+import java.io.Writer;
 import java.util.Date;
 import java.util.Date;
 import org.json.JSONObject;
@@ -47,6 +48,9 @@ public class IMAPDemo {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
+	Writer writer_ = null;
+	public void setWriter(Writer w){writer_ = w;}
+	void write(String s)throws Exception{if(writer_!=null)writer_.write(s);}
 	public IMAPDemo() throws Exception{
 		String host = KeyRing.getHost();
 		int port = 993;
@@ -66,7 +70,7 @@ public class IMAPDemo {
 		fol[1] = st.getFolder("1").getFolder("Sent Messages");
 		fol[fol.length-1].open(Folder.READ_ONLY);
 	}
-	String reply(String input) throws Exception
+	void reply(String input) throws Exception
 	{
 		Scanner scanner = new Scanner(System.in).useDelimiter("\\n");
 		String ename;
@@ -80,18 +84,30 @@ public class IMAPDemo {
 		ename = input;
 		System.out.println("\tgot: "+ename);
 		/*if(ename.equals("exit"))
-			break;*/
+		  break;*/
 		try{
 			String[] fs = ename.split(" ");
+			if(fs[0].equals("ktalk"))
+			{
+				String[] s = fs[1].split(":");
+				obj	.put("hours",Integer.parseInt(s[0]))
+					.put("mins",Integer.parseInt(s[1]));
+				if(fs.length>=2)
+					obj.put("diff",Integer.parseInt(fs[2]));
+				write( String.format("ktalk; %s %d, %02d:%02d;\n",
+					IMAPDemo.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
+					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
+				return;
+			}
 			if(fs[0].equals("skype"))
 			{
 				String[] s = fs[1].split(":");
 				obj	.put("hours",Integer.parseInt(s[0]))
-						.put("mins",Integer.parseInt(s[1]));
-				return String.format("skypeCall; %s %d, %02d:%02d;\n",
+					.put("mins",Integer.parseInt(s[1]));
+				write( String.format("skypeCall; %s %d, %02d:%02d;\n",
 					IMAPDemo.months[curDate.getMonth()],curDate.getDate(),
-					obj.getInt("hours"),obj.getInt("mins"));//FIXME: replace with call to makeSubjectLine
-				//continue;
+					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
+				return;
 			}
 			String[] s = fs[0].split(":");
 			if(fs.length >= 2){
@@ -100,13 +116,13 @@ public class IMAPDemo {
 				{
 					String[] pieces = fs[1].split("/");
 					obj	.put("month",Integer.parseInt(pieces[0])-1)
-							.put("day",Integer.parseInt(pieces[1]));
+						.put("day",Integer.parseInt(pieces[1]));
 				}
 				else
 					obj.put("diff",Integer.parseInt(fs[1]));
 			}
 			obj	.put("hours",Integer.parseInt(s[0]))
-					.put("mins",Integer.parseInt(s[1]));
+				.put("mins",Integer.parseInt(s[1]));
 			System.out.printf("\t%s\n",obj.toString());
 			ss = new SearchStruct(obj);
 			for(int i = 0; i < fol.length; i++){
@@ -117,7 +133,7 @@ public class IMAPDemo {
 				for(Message m : ms){
 					try{
 						if(ss.test(m))
-							return String.format("%s\n",makeSubjectLine(m));
+							write(String.format("%s\n",makeSubjectLine(m)));
 					}
 					catch(Exception e){
 						System.out.println("\t\t"+e.getMessage());
@@ -129,17 +145,16 @@ public class IMAPDemo {
 			e.printStackTrace();
 			//continue;
 		}
-		return "nothing found";
 	}
 	static String makeSubjectLine(Message m) throws Exception
 	{
 		Date rd = m.getReceivedDate();
 		String res =
-		(isFrom(m,KeyRing.getKMail())?"fromK":"")+
-		"; "+
-		months[rd.getMonth()]+" "+rd.getDate()+", "+
-		String.format("%02d:%02d",rd.getHours(),rd.getMinutes())+
-		"; "+trimmedSubject(m.getSubject());
+			(isFrom(m,KeyRing.getKMail())?"fromK":"")+
+			"; "+
+			months[rd.getMonth()]+" "+rd.getDate()+", "+
+			String.format("%02d:%02d",rd.getHours(),rd.getMinutes())+
+			"; "+trimmedSubject(m.getSubject());
 		return res;
 	}
 	static Folder myGetFolder(String name) throws Exception
