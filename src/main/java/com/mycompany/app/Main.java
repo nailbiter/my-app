@@ -52,6 +52,10 @@ public class Main{
 		public SlackChannel sc_ = null;
 		public void write(char[] cbuf,int off,int len){
 			String s = new String(cbuf,off,len);
+			write(s);
+		}
+		@Override
+		public void write(String s){
 			if(ss_!=null && sc_!=null)
 				ss_.sendMessage(sc_,s);
 		}
@@ -86,6 +90,7 @@ public class Main{
 						if(senderUserName.equals(KeyRing.getUserName())){
 							sw_.sc_ = channelOnWhichMessageWasPosted;
 							id.reply(messageContent);
+							sw_.write("that's all!");
 						}
 					}
 					catch(Exception e)
