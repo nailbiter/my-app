@@ -91,7 +91,7 @@ public class Main{
 						if(senderUserName.equals(KeyRing.getUserName())){
 							sw_.sc_ = channelOnWhichMessageWasPosted;
 							id.reply(messageContent);
-							sw_.write("that's all!");
+							sw_.write("that's all, folks!");
 						}
 					}
 					catch(Exception e)
