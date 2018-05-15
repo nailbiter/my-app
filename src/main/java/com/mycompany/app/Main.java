@@ -64,7 +64,7 @@ public class Main{
 	{
 		
 		id = new IMAPDemo();
-		id.setWriter(sw_= new SlackWriter());
+		/*id.setWriter(sw_= new SlackWriter());
 		String token = KeyRing.getBotWebToken();
 		session = SlackSessionFactory.createWebSocketSlackSession(token);
 		session.connect();
@@ -72,7 +72,7 @@ public class Main{
 
 		registeringAListener(session);
 		
-		for(;;);
+		for(;;);*/
 	}
 	public static void registeringAListener(SlackSession session)
 	{
