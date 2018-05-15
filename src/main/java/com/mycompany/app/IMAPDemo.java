@@ -1,9 +1,19 @@
 package com.mycompany.app;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Date;
 import java.util.Date;
 import org.json.JSONObject;
+import org.w3c.tidy.Tidy;
+import org.xhtmlrenderer.pdf.ITextRenderer;
+
 import java.util.Properties;
 import java.util.Properties;
 import java.util.Scanner;
@@ -11,11 +21,13 @@ import java.util.Scanner;
 import java.util.Scanner;
 import java.util.Scanner;
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Folder;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.Message;
 import javax.mail.Message;
 import javax.mail.Session;
@@ -31,6 +43,8 @@ import javax.mail.Store;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Address;
+
+import com.lowagie.text.DocumentException;
 import com.ullink.slack.simpleslackapi.*;
 import com.ullink.slack.simpleslackapi.impl.*;
 import com.ullink.slack.simpleslackapi.SlackChannel;
@@ -69,6 +83,57 @@ public class IMAPDemo {
 		fol[0] = myGetFolder("INBOX");
 		fol[1] = st.getFolder("1").getFolder("Sent Messages");
 		fol[fol.length-1].open(Folder.READ_ONLY);
+		
+		
+		boolean[] flags = new boolean[] {false,false,false};
+		fol[0].open(Folder.READ_ONLY);
+		Message msg = fol[0].getMessage(fol[0].getMessageCount());
+		String filename = msg.getSubject();
+		if(flags[0])
+		{
+	        Multipart mp = (Multipart) msg.getContent();
+	        BodyPart bp = mp.getBodyPart(1);
+	        FileOutputStream os = new FileOutputStream(filename + ".html");
+	        bp.writeTo(os);
+		}
+		
+        //use jtidy to clean up the html 
+        if(flags[1])
+        		cleanHtml(filename);
+        //save it into pdf
+        if(flags[2])
+        		createPdf(filename);
+	}
+	public static void cleanHtml(String filename) {
+	    File file = new File(filename + ".html");
+	    InputStream in = null;
+	    try {
+	        in = new FileInputStream(file);
+	    } catch (FileNotFoundException e) {
+	        e.printStackTrace();
+	    }
+	    OutputStream out = null;
+	    try {
+	        out = new FileOutputStream(filename + ".xhtml");
+	    } catch (FileNotFoundException e) {
+	        e.printStackTrace();
+	    }
+	    final Tidy tidy = new Tidy();
+	    tidy.setQuiet(false);
+	    tidy.setShowWarnings(true);
+	    tidy.setShowErrors(0);
+	    tidy.setMakeClean(true);
+	    tidy.setForceOutput(true);
+	    org.w3c.dom.Document document = tidy.parseDOM(in, out);
+	}
+	public static void createPdf(String filename)
+	        throws IOException, DocumentException {
+	    OutputStream os = new FileOutputStream(filename + ".pdf");
+	    ITextRenderer renderer = new ITextRenderer();
+	    renderer.setDocument(new File(filename + ".xhtml"));
+	    renderer.layout();
+	    renderer.createPDF(os) ;
+	    os.close();
 	}
 	void reply(String input) throws Exception
 	{

@@ -71,6 +71,7 @@ public class Main{
 		sw_.ss_ = session;
 
 		registeringAListener(session);
+		
 		for(;;);
 	}
 	public static void registeringAListener(SlackSession session)
@@ -92,7 +93,7 @@ public class Main{
 							sw_.sc_ = channelOnWhichMessageWasPosted;
 							id.reply(messageContent);
 							sw_.write("that's all, folks!");
-						}
+						}	
 					}
 					catch(Exception e)
 					{
