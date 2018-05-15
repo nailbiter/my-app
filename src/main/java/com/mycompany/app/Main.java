@@ -62,6 +62,7 @@ public class Main{
 	}
 	public static void main(String[] args) throws Exception
 	{
+		
 		id = new IMAPDemo();
 		id.setWriter(sw_= new SlackWriter());
 		String token = KeyRing.getBotWebToken();
