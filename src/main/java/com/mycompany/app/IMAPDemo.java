@@ -157,7 +157,7 @@ public class IMAPDemo {
 				String[] s = fs[1].split(":");
 				obj	.put("hours",Integer.parseInt(s[0]))
 					.put("mins",Integer.parseInt(s[1]));
-				if(fs.length>=2)
+				if(fs.length>=3)
 					obj.put("diff",Integer.parseInt(fs[2]));
 				write( String.format("ktalk; %s %d, %02d:%02d;\n",
 					IMAPDemo.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
@@ -169,10 +169,11 @@ public class IMAPDemo {
 				String[] s = fs[1].split(":");
 				obj	.put("hours",Integer.parseInt(s[0]))
 					.put("mins",Integer.parseInt(s[1]));
+				if(fs.length>=3)
+					obj.put("diff",Integer.parseInt(fs[2]));
 				write( String.format("skypeCall; %s %d, %02d:%02d;\n",
-					IMAPDemo.months[curDate.getMonth()],curDate.getDate(),
+					IMAPDemo.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
 					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
-				return;
 			}
 			String[] s = fs[0].split(":");
 			if(fs.length >= 2){
