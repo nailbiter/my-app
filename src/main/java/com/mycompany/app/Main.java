@@ -56,11 +56,11 @@ public class Main{
 		}
 		@Override
 		public void write(String s){
-			System.out.format("plan to write: %s", s);
+			System.out.format("plan to write: %s\n", s);
 			if(ss_!=null && sc_!=null)
 				ss_.sendMessage(sc_,s);
 			else
-				System.out.format("could not write: %s", s);
+				System.out.format("could not write: %s\n", s);
 		}
 	}
 	public static void main(String[] args) throws Exception

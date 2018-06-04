@@ -6,8 +6,14 @@ import java.util.Properties;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 /**
  * 
@@ -20,11 +26,56 @@ public class MailAccount {
 	private Session sess;
 	private Store st;
 	private ArrayList<Folder> fols = new ArrayList<Folder>();
+	private String address_;
+	public MailAction myMA = new MailAction(){
 
-	public MailAccount(String host, String user, String password, int port) throws MessagingException
+		@Override
+		public void act(Message message) throws Exception {
+			System.out.println("here I go");
+			
+			Message forward = new MimeMessage(sess);
+			forward.setRecipients(Message.RecipientType.TO,
+					InternetAddress.parse(KeyRing.getTrello()));
+            forward.setSubject("Fwd: " + message.getSubject());
+            forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
+            
+         // Create the message part
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            // Create a multipart message
+            Multipart multipart = new MimeMultipart();
+            // set content
+            messageBodyPart.setContent(message, "message/rfc822");
+            // Add part to multi part
+            multipart.addBodyPart(messageBodyPart);
+            // Associate multi-part with message
+            forward.setContent(multipart);
+            forward.saveChanges();
+            Transport.send(forward);
+            /*Transport t = session.getTransport("smtp");
+            try {
+               //connect to the smpt server using transport instance
+		  //change the user and password accordingly
+               t.connect("abc", "*****");
+               t.sendMessage(forward, forward.getAllRecipients());
+            } finally {
+               t.close();
+            }*/
+		}
+		
+	};
+
+	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException
 	{
 		Properties props = System.getProperties();
-		sess = Session.getInstance(props, null);
+		props.put("mail.debug", "true");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.user", user);
+        props.put("mail.smtp.password",password);
+        props.put("mail.smtp.starttls.enable","true");
+        props.put("mail.smtp.EnableSSL.enable","true");
+        SmtpAuthenticator authentication = new SmtpAuthenticator(user,password);
+	    sess = Session.getInstance(props, authentication);
+		address_ = address;
 
 		st = sess.getStore("imaps");
 		st.connect(host, port, user, password);
