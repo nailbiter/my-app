@@ -146,7 +146,7 @@ public class MailAccount {
 				"お忙しい中、貴重なお時間を取っていただき、まことに有難うございます。\n" + 
 				"\n" +
 				"先生のメールを頂きました。しかし、今は他の研究タスクを致しますので、直ぐに返事ができません。\n"+
-				"今のタスクを終わったら、直ぐにご返事致します。\n"+
+				"今のタスクを終わったら、直ぐにご返事致します。大変申し訳ございません。\n"+
 				"\n"+
 				"アレックス";
 		ReplyAction()
@@ -162,11 +162,14 @@ public class MailAccount {
      		replyMessage.setFrom(new InternetAddress(address_));
      		String replyText = "";
      		try{
-     			String text;
-     			if(false)
-     				text = (String) msg.getContent();
-     			else
-     				text = getText(((Multipart)msg.getContent()).getBodyPart(0)); 
+     			String text = "";
+     			Object content = msg.getContent();
+     			
+     			if(content instanceof String)
+     				text = (String)content;
+     			if(content instanceof Multipart)
+     				text = getText(((Multipart)msg.getContent()).getBodyPart(0));
+     			
      			replyText = text.replaceAll("(?m)^", "> ");
      		}
      		catch(Exception e)

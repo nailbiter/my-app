@@ -119,10 +119,7 @@ public class MailManager implements MailAction {
 		}}});
 		scheduler.start();
 		
-		if(!false)
-		{
-			reply(true);
-		}
+		//reply(true);
 	}
 	void command(String cmd, String tail)
 	{
@@ -142,7 +139,7 @@ public class MailManager implements MailAction {
 	private void reply(boolean flag) {
 		if(flag)
 		{
-			replyActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getGmail()),
+			replyActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getMyMail()),
 					mc_.getReplyAction());
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
@@ -255,7 +252,6 @@ public class MailManager implements MailAction {
 		String res=subject, tmp;
 		do{
 			subject = res;
-			//res = processed(subject)
 			res = subject.replaceFirst("^Re: *","").replaceFirst("^Fwd: *","");
 		}
 		while(!res.equals(subject));
