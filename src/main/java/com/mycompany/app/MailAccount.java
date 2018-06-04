@@ -155,7 +155,6 @@ public class MailAccount {
 		}
 		@Override
 		public void act(Message msg) throws Exception {
-			// TODO Auto-generated method stub
 			System.out.println("here reply goes!");
 			Message replyMessage = new MimeMessage(sess);
      		replyMessage = (MimeMessage) msg.reply(false);
