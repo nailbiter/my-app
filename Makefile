@@ -1,6 +1,6 @@
 JARNAME=my-app-1.0-SNAPSHOT-jar-with-dependencies.jar
 SRCDIR=src/main/java/com/mycompany/app/
-SRCs=IMAPDemo Main SearchStruct ForwardEmail SmtpAuthenticator MailToolBox
+SRCs=IMAPDemo Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount
 SRCs_all=$(SRCs) KeyRing
 MAINCLASS=Main
 
