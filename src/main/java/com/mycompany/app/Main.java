@@ -56,7 +56,7 @@ public class Main{
 		}
 		@Override
 		public void write(String s){
-			System.out.format("plan to write: %s\n", s);
+			//System.out.format("plan to write: %s\n", s);
 			if(ss_!=null && sc_!=null)
 				ss_.sendMessage(sc_,s);
 			else

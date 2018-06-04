@@ -1,5 +1,6 @@
 package com.mycompany.app;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -7,6 +8,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
@@ -27,15 +29,16 @@ public class MailAccount {
 	private Store st;
 	private ArrayList<Folder> fols = new ArrayList<Folder>();
 	private String address_;
-	public MailAction myMA = new MailAction(){
-
+	public class ForwardAction implements MailAction{
+		private String to_ = null; 
+		ForwardAction(String to){ to_ = to;}
 		@Override
 		public void act(Message message) throws Exception {
 			System.out.println("here I go");
 			
 			Message forward = new MimeMessage(sess);
 			forward.setRecipients(Message.RecipientType.TO,
-					InternetAddress.parse(KeyRing.getTrello()));
+					InternetAddress.parse(to_));
             forward.setSubject("Fwd: " + message.getSubject());
             forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
             
@@ -50,30 +53,25 @@ public class MailAccount {
             // Associate multi-part with message
             forward.setContent(multipart);
             forward.saveChanges();
+            System.out.format("subj: %s\n", forward.getSubject());
+            
             Transport.send(forward);
-            /*Transport t = session.getTransport("smtp");
-            try {
-               //connect to the smpt server using transport instance
-		  //change the user and password accordingly
-               t.connect("abc", "*****");
-               t.sendMessage(forward, forward.getAllRecipients());
-            } finally {
-               t.close();
-            }*/
 		}
-		
-	};
+	
+	}
 
 	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException
 	{
 		Properties props = System.getProperties();
-		props.put("mail.debug", "true");
+		props.put("mail.smtp.host", host);
+		props.put("mail.debug", "false");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.user", user);
         props.put("mail.smtp.password",password);
         props.put("mail.smtp.starttls.enable","true");
         props.put("mail.smtp.EnableSSL.enable","true");
         SmtpAuthenticator authentication = new SmtpAuthenticator(user,password);
+        props.put("mail.smtp.port", 587);
 	    sess = Session.getInstance(props, authentication);
 		address_ = address;
 
@@ -135,5 +133,95 @@ public class MailAccount {
 				}
 			}
 		}
+	}
+	public ForwardAction getForwardAction(String to)
+	{
+		return new ForwardAction(to);
+	}
+	class ReplyAction implements MailAction{
+		final String body = 
+				"先生\n" + 
+				"\n" + 
+				"ご指導どうもありがとうございます！\n" + 
+				"お忙しい中、貴重なお時間を取っていただき、まことに有難うございます。\n" + 
+				"\n" +
+				"先生のメールを頂きました。しかし、今は他の研究タスクを致しますので、直ぐに返事ができません。\n"+
+				"今のタスクを終わったら、直ぐにご返事致します。\n"+
+				"\n"+
+				"アレックス";
+		ReplyAction()
+		{
+			
+		}
+		@Override
+		public void act(Message msg) throws Exception {
+			// TODO Auto-generated method stub
+			System.out.println("here reply goes!");
+			Message replyMessage = new MimeMessage(sess);
+     		replyMessage = (MimeMessage) msg.reply(false);
+     		replyMessage.setFrom(new InternetAddress(address_));
+     		String replyText = "";
+     		try{
+     			String text;
+     			if(false)
+     				text = (String) msg.getContent();
+     			else
+     				text = getText(((Multipart)msg.getContent()).getBodyPart(0)); 
+     			replyText = text.replaceAll("(?m)^", "> ");
+     		}
+     		catch(Exception e)
+     		{
+     			e.printStackTrace(System.out);
+     		}
+     		System.out.println("before the end");
+     		replyMessage.setText(body + "\n" + replyText);
+     		Transport.send(replyMessage);
+		}
+	}
+	private boolean textIsHtml = false;
+
+    /**
+     * Return the primary text content of the message.
+     */
+    private String getText(Part p) throws
+                MessagingException, IOException {
+        if (p.isMimeType("text/*")) {
+            String s = (String)p.getContent();
+            textIsHtml = p.isMimeType("text/html");
+            return s;
+        }
+
+        if (p.isMimeType("multipart/alternative")) {
+            // prefer html text over plain text
+            Multipart mp = (Multipart)p.getContent();
+            String text = null;
+            for (int i = 0; i < mp.getCount(); i++) {
+                Part bp = mp.getBodyPart(i);
+                if (bp.isMimeType("text/plain")) {
+                    if (text == null)
+                        text = getText(bp);
+                    continue;
+                } else if (bp.isMimeType("text/html")) {
+                    String s = getText(bp);
+                    if (s != null)
+                        return s;
+                } else {
+                    return getText(bp);
+                }
+            }
+            return text;
+        } else if (p.isMimeType("multipart/*")) {
+            Multipart mp = (Multipart)p.getContent();
+            for (int i = 0; i < mp.getCount(); i++) {
+                String s = getText(mp.getBodyPart(i));
+                if (s != null)
+                    return s;
+            }
+        }
+
+        return null;
+    }
+	public MailAction getReplyAction() {
+		return new ReplyAction();
 	}
 }

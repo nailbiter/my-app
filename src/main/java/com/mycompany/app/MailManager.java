@@ -118,6 +118,11 @@ public class MailManager implements MailAction {
 			e.printStackTrace();
 		}}});
 		scheduler.start();
+		
+		if(!false)
+		{
+			reply(true);
+		}
 	}
 	void command(String cmd, String tail)
 	{
@@ -127,11 +132,28 @@ public class MailManager implements MailAction {
 			forward(Boolean.parseBoolean(tail));
 			return;
 		}
+		if(cmd.equals("reply"))
+		{
+			reply(Boolean.parseBoolean(tail));
+			return;
+		}
+	}
+	int replyActionCode_;
+	private void reply(boolean flag) {
+		if(flag)
+		{
+			replyActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getGmail()),
+					mc_.getReplyAction());
+			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
+		}
+		else
+			removeIterator(replyActionCode_);
 	}
 	void forward(boolean flag) {
 		if(flag)
 		{
-			forwardActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getGmail()),mc_.myMA);
+			forwardActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getGmail()),
+					mc_.getForwardAction(KeyRing.getTrello()));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}
 		else
