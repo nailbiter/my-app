@@ -64,7 +64,7 @@ public class IMAPDemo {
 		fol[fol.length-1].open(Folder.READ_ONLY);
 		
 		
-		boolean[] flags = new boolean[] {true,false,false,true};
+		boolean[] flags = new boolean[] {false,false,false,false,true};
 		fol[0].open(Folder.READ_ONLY);
 		Message msg = this.getTestMessage(fol[0]);
 		String filename = msg.getSubject();
@@ -93,6 +93,25 @@ public class IMAPDemo {
         		createPdf(filename);
         if(flags[3])
         		inmain(msg,"tesime");
+        if(flags[4]) {
+        		System.out.println(msg.getSubject());
+        		Message replyMessage = new MimeMessage(sess);
+        		replyMessage = (MimeMessage) msg.reply(false);
+            replyMessage.setFrom(new InternetAddress(KeyRing.getGmail()));
+            if(true)
+            {
+            		String text = (String)msg.getContent();
+            		String replyText = text.replaceAll("(?m)^", "> ");
+            		// allow user to edit replyText,
+            		// e.g., using a Swing GUI or a web form
+            		replyMessage.setText("Thanks\n"+replyText);         
+            }
+            else {
+            		replyMessage.setText("Thanks");
+            }
+            replyMessage.setReplyTo(msg.getReplyTo());
+            replyMessage.writeTo(new FileOutputStream(new File("./mail.eml")));
+        }
 	}
 	public void inmain(Message m, String string) throws Exception {
 		String  to, subject = null, from = KeyRing.getMyMail(), 
