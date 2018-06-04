@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Hashtable;
+
 import org.json.JSONObject;
 import org.w3c.tidy.Tidy;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -21,51 +24,105 @@ import javax.mail.BodyPart;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.URLName;
+import javax.mail.event.MessageCountEvent;
+import javax.mail.event.MessageCountListener;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import com.lowagie.text.DocumentException;
 
-public class IMAPDemo {
+import it.sauronsoftware.cron4j.Scheduler;
+
+public class MailManager implements MailAction {
 	static Date curDate = null;
-	static Session sess = null;
-	static Store st = null;
-	static Folder[] fol = null;
+	private MailAccount mc_ = null;
 	static final String[] months = {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
 	Writer writer_ = null;
+	class SearchAndAct{
+		public MailSearchPattern msp;
+		public MailAction ma;
+		SearchAndAct(MailSearchPattern Msp, MailAction Ma){
+			msp = Msp;
+			ma = Ma;
+		}
+	}
+	Hashtable<Integer,SearchAndAct> actors = new Hashtable<Integer,SearchAndAct>();
+	static class MyMessageCountListener implements MessageCountListener{
+		Hashtable<Integer,SearchAndAct> actors_ = null;
+		MyMessageCountListener(Hashtable<Integer,SearchAndAct> actors)
+		{
+			actors_ = actors;
+		}
+		@Override
+		public void messagesAdded(MessageCountEvent ev) {
+			Message[] msgs = ev.getMessages();
+			Collection<SearchAndAct> sas = actors_.values();
+			for(Message msg : msgs)
+			{
+				try {
+					//System.out.format("\t%s from %s\n", msg.getSubject(),msg.getFrom()[0].toString());
+					for(SearchAndAct sa : sas) {
+							if(sa.msp.test(msg))
+								sa.ma.act(msg);
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		@Override
+		public void messagesRemoved(MessageCountEvent arg0) {
+			return;
+		}
+		
+	}
 	public void setWriter(Writer w){writer_ = w;}
-	void write(String s)throws Exception{if(writer_!=null)writer_.write(s);}
-	public IMAPDemo() throws Exception{
+	void write(String s)throws Exception{
+		if(writer_!=null)
+			writer_.write(s);
+		else
+			System.out.format("wanted to write \"%s\", but couldn't\n",s);
+		}
+	public MailManager() throws Exception{
 		String host = KeyRing.getHost();
 		int port = 993;
 		String user = KeyRing.getUser();
 		String password = KeyRing.getPassword();
+		mc_ = new MailAccount(host,user,password,port);
+		final Folder fol = mc_.openFolder("INBOX"); 
+		fol.addMessageCountListener(new MyMessageCountListener(actors));
+		mc_.openFolder("1", "Sent Messages");
+		this.addIterator(new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
 
-		Properties props = System.getProperties();
-		sess = Session.getInstance(props, null);
-
-		st = sess.getStore("imaps");
-		st.connect(host, port, user, password);
-		for(Folder f : st.getFolder("1").list()){
-			System.out.printf("%s\n",f.getName());
-		}
-		fol = new Folder[2];
-		fol[0] = myGetFolder("INBOX");
-		fol[1] = st.getFolder("1").getFolder("Sent Messages");
-		fol[fol.length-1].open(Folder.READ_ONLY);
+			@Override
+			public void act(Message message) throws Exception {
+				// TODO Auto-generated method stub
+				System.out.format("new mail from K: %s\n", message.getSubject());
+				write(String.format("new mail from K: %s\n", message.getSubject()));
+			}
+		});
+		Scheduler scheduler = new Scheduler();
+		scheduler.schedule("* * * * *", 
+				new Runnable() {public void run() {try {
+			fol.getMessageCount();
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}}});
+		scheduler.start();
 		
-		
-		boolean[] flags = new boolean[] {false,false,false,false,true};
-		fol[0].open(Folder.READ_ONLY);
+		/*boolean[] flags = new boolean[] {false,false,false,false,true};
 		Message msg = this.getTestMessage(fol[0]);
 		String filename = msg.getSubject();
 		System.out.format("subject: %s\n", filename);
@@ -111,7 +168,7 @@ public class IMAPDemo {
             }
             replyMessage.setReplyTo(msg.getReplyTo());
             replyMessage.writeTo(new FileOutputStream(new File("./mail.eml")));
-        }
+        }*/
 	}
 	public void inmain(Message m, String string) throws Exception {
 		String  to, subject = null, from = KeyRing.getMyMail(), 
@@ -257,39 +314,26 @@ public class IMAPDemo {
 		}
 		throw new Exception();
 	}
-	public static void cleanHtml(String filename) {
-	    File file = new File(filename + ".html");
-	    InputStream in = null;
-	    try {
-	        in = new FileInputStream(file);
-	    } catch (FileNotFoundException e) {
-	        e.printStackTrace();
-	    }
-	    OutputStream out = null;
-	    try {
-	        out = new FileOutputStream(filename + ".xhtml");
-	    } catch (FileNotFoundException e) {
-	        e.printStackTrace();
-	    }
-	    final Tidy tidy = new Tidy();
-	    tidy.setQuiet(false);
-	    tidy.setShowWarnings(true);
-	    tidy.setShowErrors(0);
-	    tidy.setMakeClean(true);
-	    tidy.setForceOutput(true);
-	    org.w3c.dom.Document document = tidy.parseDOM(in, out);
+	void command(String cmd, String tail)
+	{
+		System.out.format("got command: %s, tail: %s\n",cmd,tail);
+		if(cmd.equals("forward"))
+		{
+			forward(Boolean.parseBoolean(tail));
+			return;
+		}
 	}
-	public static void createPdf(String filename)
-	        throws IOException, DocumentException {
-	    OutputStream os = new FileOutputStream(filename + ".pdf");
-	    ITextRenderer renderer = new ITextRenderer();
-	    renderer.setDocument(new File(filename + ".xhtml"));
-	    renderer.layout();
-	    renderer.createPDF(os) ;
-	    os.close();
+	void forward(boolean flag) {
+		//TODO
 	}
 	void reply(String input) throws Exception
 	{
+		if(input.startsWith("/"))
+		{
+			String[] opt = input.split(" ", 2);
+			command(opt[0].substring(1),opt[1]);
+			return;
+		}
 		Scanner scanner = new Scanner(System.in).useDelimiter("\\n");
 		String ename;
 		JSONObject obj = null;
@@ -313,7 +357,7 @@ public class IMAPDemo {
 				if(fs.length>=2)
 					obj.put("diff",Integer.parseInt(fs[2]));
 				write( String.format("ktalk; %s %d, %02d:%02d;\n",
-					IMAPDemo.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
+					MailManager.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
 					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
 				return;
 			}
@@ -323,7 +367,7 @@ public class IMAPDemo {
 				obj	.put("hours",Integer.parseInt(s[0]))
 					.put("mins",Integer.parseInt(s[1]));
 				write( String.format("skypeCall; %s %d, %02d:%02d;\n",
-					IMAPDemo.months[curDate.getMonth()],curDate.getDate(),
+					MailManager.months[curDate.getMonth()],curDate.getDate(),
 					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
 				return;
 			}
@@ -343,21 +387,7 @@ public class IMAPDemo {
 				.put("mins",Integer.parseInt(s[1]));
 			System.out.printf("\t%s\n",obj.toString());
 			ss = new SearchStruct(obj);
-			for(int i = 0; i < fol.length; i++){
-				if(!fol[i].isOpen())
-					fol[i].open(Folder.READ_ONLY);
-				System.out.println(String.format("\t%s",fol[i].getName()));
-				Message[] ms = fol[i].getMessages();
-				for(Message m : ms){
-					try{
-						if(ss.test(m))
-							write(String.format("%s\n",makeSubjectLine(m)));
-					}
-					catch(Exception e){
-						System.out.println("\t\t"+e.getMessage());
-					}
-				}
-			}
+			mc_.iterateThroughAllMessages(ss, this);
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -374,27 +404,6 @@ public class IMAPDemo {
 			String.format("%02d:%02d",rd.getHours(),rd.getMinutes())+
 			"; "+trimmedSubject(m.getSubject());
 		return res;
-	}
-	static Folder myGetFolder(String name) throws Exception
-	{
-		Folder res = null;
-		res = st.getFolder(name);
-		if(res.exists()){
-			for(Folder f : res.list()){
-				System.out.println(f.getName());
-			}
-			//res.open(Folder.READ_ONLY);
-		}
-		else
-			System.out.printf("%s is not exist.\n", name);
-		return res;
-	}
-
-	static boolean isSeen(Flags flags)
-	{
-		//TODO
-		//String flagstring = flags.toString
-		return flags.toString().contains("\\Seen");
 	}
 	static boolean isFrom(Message m,String tmail) throws Exception
 	{
@@ -417,6 +426,19 @@ public class IMAPDemo {
 			res = subject.replaceFirst("^Re: *","").replaceFirst("^Fwd: *","");
 		}
 		while(!res.equals(subject));
+		return res;
+	}
+	@Override
+	public void act(Message message) throws Exception {
+		write(String.format("%s\n",makeSubjectLine(message)));
+	}
+	public void removeIterator(int code) {
+		actors.remove(code);
+	}
+	public int addIterator(MailSearchPattern msp, MailAction ma)
+	{
+		int res = new Random().nextInt();
+		actors.put(res, new SearchAndAct(msp,ma));
 		return res;
 	}
 }

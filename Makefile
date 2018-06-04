@@ -1,6 +1,7 @@
 JARNAME=my-app-1.0-SNAPSHOT-jar-with-dependencies.jar
 SRCDIR=src/main/java/com/mycompany/app/
-SRCs=IMAPDemo Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount
+SRCs=MailManager Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount\
+     MailSearchPattern MailAction IsFrom
 SRCs_all=$(SRCs) KeyRing
 MAINCLASS=Main
 
@@ -12,5 +13,5 @@ all: target/$(JARNAME)
 commit:
 	git add $(addprefix $(SRCDIR),$(addsuffix .java,$(SRCs)))
 	git commit -a
-target/$(JARNAME) : $(addprefix $(SRCDIR),$(addsuffix .java,$(SRCs_all)))
+target/$(JARNAME) : $(addprefix $(SRCDIR),$(addsuffix .java,$(SRCs_all))) pom.xml
 	mvn package

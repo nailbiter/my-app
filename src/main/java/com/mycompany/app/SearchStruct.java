@@ -32,7 +32,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.Address;
 
-class SearchStruct{
+class SearchStruct implements MailSearchPattern{
   protected Date curDate = null;
   protected int mins_,
   hours_,month_,date_;
@@ -49,7 +49,7 @@ class SearchStruct{
     date_ = (obj.optInt("day",curDate.getDate())+obj.optInt("diff",0));
     month_ = obj.optInt("month",curDate.getMonth());
   }
-  boolean test(Message m) throws Exception
+  public boolean test(Message m) throws Exception
   {
     Date sd = null;
     if(false)

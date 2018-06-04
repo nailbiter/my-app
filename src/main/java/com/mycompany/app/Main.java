@@ -41,7 +41,7 @@ import java.io.Writer;
 
 
 public class Main{
-	static IMAPDemo id = null;
+	static MailManager id = null;
 	static SlackSession session = null;
 	static SlackUser sb = null;
 	static SlackWriter sw_ = null;
@@ -56,23 +56,29 @@ public class Main{
 		}
 		@Override
 		public void write(String s){
+			System.out.format("plan to write: %s", s);
 			if(ss_!=null && sc_!=null)
 				ss_.sendMessage(sc_,s);
+			else
+				System.out.format("could not write: %s", s);
 		}
 	}
 	public static void main(String[] args) throws Exception
 	{
 		
-		id = new IMAPDemo();
-		/*id.setWriter(sw_= new SlackWriter());
+		id = new MailManager();
+		id.setWriter(sw_= new SlackWriter());
 		String token = KeyRing.getBotWebToken();
 		session = SlackSessionFactory.createWebSocketSlackSession(token);
 		session.connect();
 		sw_.ss_ = session;
+		sw_.sc_ = session.findChannelByName("general");
+		if(sw_.sc_==null)
+			System.out.format("NOPE\n");
 
 		registeringAListener(session);
 		
-		for(;;);*/
+		for(;;);
 	}
 	public static void registeringAListener(SlackSession session)
 	{

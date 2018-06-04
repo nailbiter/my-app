@@ -8,6 +8,12 @@
   <name>my-app</name>
   <url>http://maven.apache.org</url>
   <dependencies>
+	<!-- https://mvnrepository.com/artifact/it.sauronsoftware.cron4j/cron4j -->
+	<dependency>
+	    <groupId>it.sauronsoftware.cron4j</groupId>
+	    <artifactId>cron4j</artifactId>
+	    <version>2.2.5</version>
+	</dependency>
 	<dependency>
 	    <groupId>org.xhtmlrenderer</groupId>
 	    <artifactId>flying-saucer-pdf</artifactId>
