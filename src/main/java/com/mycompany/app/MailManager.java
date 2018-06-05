@@ -47,6 +47,7 @@ public class MailManager implements MailAction {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
+	static final String testmail = true ? KeyRing.getKMail() : KeyRing.getMyMail();
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
 	class SearchAndAct{
@@ -100,7 +101,7 @@ public class MailManager implements MailAction {
 			@Override
 			public boolean test(Message m) throws Exception {
 				Address[] recipients = m.getAllRecipients();
-				final String tmail = true ? KeyRing.getKMail() : KeyRing.getGmail(); 
+				final String tmail = testmail; 
 				for(int i = 0; i < recipients.length; i++)
 				{
 					if(recipients[i].toString().contains(tmail))
@@ -162,7 +163,7 @@ public class MailManager implements MailAction {
 	private void reply(boolean flag) {
 		if(flag)
 		{
-			replyActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getMyMail()),
+			replyActionCode_ = addIterator(new IsFrom(testmail),
 					mc_.getReplyAction());
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
@@ -172,7 +173,7 @@ public class MailManager implements MailAction {
 	void forward(boolean flag) {
 		if(flag)
 		{
-			forwardActionCode_ = addIterator(new IsFrom(false?KeyRing.getKMail():KeyRing.getGmail()),
+			forwardActionCode_ = addIterator(new IsFrom(testmail),
 					mc_.getForwardAction(KeyRing.getTrello()));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}
@@ -250,6 +251,7 @@ public class MailManager implements MailAction {
 	static String makeSubjectLine(Message m) throws Exception
 	{
 		Date rd = m.getReceivedDate();
+		if(rd == null) rd = new Date();
 		String res =
 			(isFrom(m,KeyRing.getKMail())?"fromK":"")+
 			"; "+
