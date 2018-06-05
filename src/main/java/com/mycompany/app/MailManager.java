@@ -71,13 +71,11 @@ public class MailManager implements MailAction {
 			for(Message msg : msgs)
 			{
 				try {
-					//System.out.format("\t%s from %s\n", msg.getSubject(),msg.getFrom()[0].toString());
 					for(SearchAndAct sa : sas) {
 							if(sa.msp.test(msg))
 								sa.ma.act(msg);
 					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -98,18 +96,45 @@ public class MailManager implements MailAction {
 		}
 	public MailManager() throws Exception{
 		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
+		mc_.addIterator(new MailSearchPattern() {
+			@Override
+			public boolean test(Message m) throws Exception {
+				Address[] recipients = m.getAllRecipients();
+				final String tmail = true ? KeyRing.getKMail() : KeyRing.getGmail(); 
+				for(int i = 0; i < recipients.length; i++)
+				{
+					if(recipients[i].toString().contains(tmail))
+						return true;
+				}
+				return false;
+			}
+		}, 
+			new MailAction()
+			{
+
+				@Override
+				public void act(Message message) throws Exception {
+					Message m = mc_.createForward(message, KeyRing.getKmailsTrello());
+					m.setSubject(makeSubjectLine(message));
+					mc_.sendMessage(m);
+				}
+			});
 		final Folder fol = mc_.openFolder("INBOX"); 
 		fol.addMessageCountListener(new MyMessageCountListener(actors));
 		mc_.openFolder("1", "Sent Messages");
 		this.addIterator(new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
-
 			@Override
 			public void act(Message message) throws Exception {
-				// TODO Auto-generated method stub
 				System.out.format("new mail from K: %s\n", message.getSubject());
 				write(String.format("new mail from K: %s\n", message.getSubject()));
 			}
 		});
+		
+		schedule(fol);
+		//reply(true);
+	}
+	private void schedule(final Folder fol)
+	{
 		Scheduler scheduler = new Scheduler();
 		scheduler.schedule("* * * * *", 
 				new Runnable() {public void run() {try {
@@ -118,8 +143,6 @@ public class MailManager implements MailAction {
 			e.printStackTrace();
 		}}});
 		scheduler.start();
-		
-		//reply(true);
 	}
 	void command(String cmd, String tail)
 	{

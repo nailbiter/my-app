@@ -2,7 +2,9 @@ package com.mycompany.app;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Random;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -12,10 +14,13 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import com.mycompany.app.MailManager.SearchAndAct;
 
 /**
  * 
@@ -34,30 +39,31 @@ public class MailAccount {
 		ForwardAction(String to){ to_ = to;}
 		@Override
 		public void act(Message message) throws Exception {
-			System.out.println("here I go");
-			
-			Message forward = new MimeMessage(sess);
-			forward.setRecipients(Message.RecipientType.TO,
-					InternetAddress.parse(to_));
-            forward.setSubject("Fwd: " + message.getSubject());
-            forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
-            
-         // Create the message part
-            MimeBodyPart messageBodyPart = new MimeBodyPart();
-            // Create a multipart message
-            Multipart multipart = new MimeMultipart();
-            // set content
-            messageBodyPart.setContent(message, "message/rfc822");
-            // Add part to multi part
-            multipart.addBodyPart(messageBodyPart);
-            // Associate multi-part with message
-            forward.setContent(multipart);
-            forward.saveChanges();
-            System.out.format("subj: %s\n", forward.getSubject());
-            
-            Transport.send(forward);
+			Message forward = createForward(message,to_);
+            sendMessage(forward);
 		}
 	
+	}
+	public Message createForward(Message message, String to_) throws AddressException, MessagingException
+	{
+		Message forward = new MimeMessage(sess);
+		forward.setRecipients(Message.RecipientType.TO,
+				InternetAddress.parse(to_));
+        forward.setSubject("Fwd: " + message.getSubject());
+        forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
+        
+     // Create the message part
+        MimeBodyPart messageBodyPart = new MimeBodyPart();
+        // Create a multipart message
+        Multipart multipart = new MimeMultipart();
+        // set content
+        messageBodyPart.setContent(message, "message/rfc822");
+        // Add part to multi part
+        multipart.addBodyPart(messageBodyPart);
+        // Associate multi-part with message
+        forward.setContent(multipart);
+        forward.saveChanges();
+        return forward;
 	}
 
 	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException
@@ -177,7 +183,7 @@ public class MailAccount {
      		}
      		System.out.println("before the end");
      		replyMessage.setText(body + "\n" + replyText);
-     		Transport.send(replyMessage);
+     		sendMessage(replyMessage);
 		}
 	}
 	private boolean textIsHtml = false;
@@ -225,5 +231,30 @@ public class MailAccount {
     }
 	public MailAction getReplyAction() {
 		return new ReplyAction();
+	}
+	class SearchAndAct{
+		public MailSearchPattern msp;
+		public MailAction ma;
+		SearchAndAct(MailSearchPattern Msp, MailAction Ma){
+			msp = Msp;
+			ma = Ma;
+		}
+	}
+	Hashtable<Integer,SearchAndAct> actors = new Hashtable<Integer,SearchAndAct>();
+	public void removeIterator(int code) {
+		actors.remove(code);
+	}
+	public int addIterator(MailSearchPattern msp, MailAction ma)
+	{
+		int res = new Random().nextInt();
+		actors.put(res, new SearchAndAct(msp,ma));
+		return res;
+	}
+	public void sendMessage(Message m) throws Exception
+	{
+		for(SearchAndAct sa : actors.values())
+			if(sa.msp.test(m))
+				sa.ma.act(m);
+		Transport.send(m);
 	}
 }
