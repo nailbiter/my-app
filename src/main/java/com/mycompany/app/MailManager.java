@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
@@ -47,7 +49,7 @@ public class MailManager implements MailAction {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
-	static final String testmail = true ? KeyRing.getKMail() : KeyRing.getMyMail();
+	static final String testmail = false ? KeyRing.getKMail() : KeyRing.getMyMail();
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
 	class SearchAndAct{
@@ -97,19 +99,20 @@ public class MailManager implements MailAction {
 		}
 	public MailManager() throws Exception{
 		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
-		mc_.addIterator(new MailSearchPattern() {
-			@Override
-			public boolean test(Message m) throws Exception {
-				Address[] recipients = m.getAllRecipients();
-				final String tmail = testmail; 
-				for(int i = 0; i < recipients.length; i++)
-				{
-					if(recipients[i].toString().contains(tmail))
-						return true;
+		mc_.addIterator(MailAccount.IteratorList.OUTCOMING,
+				new MailSearchPattern() {
+				@Override
+				public boolean test(Message m) throws Exception {
+					Address[] recipients = m.getAllRecipients();
+					final String tmail = testmail; 
+					for(int i = 0; i < recipients.length; i++)
+					{
+						if(recipients[i].toString().contains(tmail))
+							return true;
+					}
+					return false;
 				}
-				return false;
-			}
-		}, 
+			}, 
 			new MailAction()
 			{
 
@@ -145,22 +148,23 @@ public class MailManager implements MailAction {
 		}}});
 		scheduler.start();
 	}
-	void command(String cmd, String tail)
+	void command(String cmd, String tail) throws Exception
 	{
 		System.out.format("got command: %s, tail: %s\n",cmd,tail);
-		if(cmd.equals("forward"))
+		Method m = null;
+		try {
+			m = this.getClass().getMethod(cmd,String.class);
+		}
+		catch(NoSuchMethodException e)
 		{
-			forward(Boolean.parseBoolean(tail));
+			write(String.format("no method %s\n", cmd));
 			return;
 		}
-		if(cmd.equals("reply"))
-		{
-			reply(Boolean.parseBoolean(tail));
-			return;
-		}
+		m.invoke(this, tail);
 	}
 	int replyActionCode_;
-	private void reply(boolean flag) {
+	private void autoreply(String tail) {
+		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
 			replyActionCode_ = addIterator(new IsFrom(testmail),
@@ -170,7 +174,17 @@ public class MailManager implements MailAction {
 		else
 			removeIterator(replyActionCode_);
 	}
-	void forward(boolean flag) {
+	void showbody(String tail) {
+		//TODO
+	}
+	void reply(String tail) {
+		//TODO
+	}
+	void replylist(String tail) {
+		//TODO
+	}
+	void forward(String tail) {
+		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
 			forwardActionCode_ = addIterator(new IsFrom(testmail),
@@ -180,7 +194,7 @@ public class MailManager implements MailAction {
 		else
 			removeIterator(forwardActionCode_);
 	}
-	void reply(String input) throws Exception
+	void process(String input) throws Exception
 	{
 		if(input.startsWith("/"))
 		{
@@ -262,11 +276,9 @@ public class MailManager implements MailAction {
 	}
 	static boolean isFrom(Message m,String tmail) throws Exception
 	{
-		//logger_.info(String.format("compare subj=%s, tmail=%s", m.getSubject(),tmail));
 		Address[] senders = m.getFrom();
 		for(int i = 0; i < senders.length; i++)
 		{
-			//logger_.info(String.format("\tsender=%s", senders[i].toString()));
 			if(senders[i].toString().contains(tmail))
 				return true;
 		}
@@ -289,6 +301,7 @@ public class MailManager implements MailAction {
 	public void removeIterator(int code) {
 		actors.remove(code);
 	}
+	//TODO: into MailAccount
 	public int addIterator(MailSearchPattern msp, MailAction ma)
 	{
 		int res = new Random().nextInt();

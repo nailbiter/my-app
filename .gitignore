@@ -1,3 +1,8 @@
 target/
 src/main/java/com/mycompany/app/KeyRing.java
 /bin/
+.settings/*
+.classpath
+.project
+*.swp
+*.swo

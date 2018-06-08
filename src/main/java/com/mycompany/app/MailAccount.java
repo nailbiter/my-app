@@ -240,19 +240,37 @@ public class MailAccount {
 			ma = Ma;
 		}
 	}
-	Hashtable<Integer,SearchAndAct> actors = new Hashtable<Integer,SearchAndAct>();
-	public void removeIterator(int code) {
-		actors.remove(code);
+	public enum IteratorList{
+		INCOMING,OUTCOMING
+	};
+	Hashtable<Integer,SearchAndAct> actorsOutcoming = new Hashtable<Integer,SearchAndAct>(),
+			actorsIncoming = new Hashtable<Integer,SearchAndAct>();
+	public void removeIterator(IteratorList il,int code) {
+		switch(il) {
+			case INCOMING:
+				actorsIncoming.remove(code);
+				break;
+			case OUTCOMING:
+				actorsOutcoming.remove(code);
+				break;
+		}
 	}
-	public int addIterator(MailSearchPattern msp, MailAction ma)
+	public int addIterator(IteratorList il,MailSearchPattern msp, MailAction ma)
 	{
 		int res = new Random().nextInt();
-		actors.put(res, new SearchAndAct(msp,ma));
+		switch(il) {
+		case INCOMING:
+			actorsIncoming.put(res, new SearchAndAct(msp,ma));
+			break;
+		case OUTCOMING:
+			actorsOutcoming.put(res, new SearchAndAct(msp,ma));
+			break;
+		}
 		return res;
 	}
 	public void sendMessage(Message m) throws Exception
 	{
-		for(SearchAndAct sa : actors.values())
+		for(SearchAndAct sa : actorsOutcoming.values())
 			if(sa.msp.test(m))
 				sa.ma.act(m);
 		Transport.send(m);
