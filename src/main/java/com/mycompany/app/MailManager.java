@@ -60,36 +60,6 @@ public class MailManager implements MailAction {
 			ma = Ma;
 		}
 	}
-	Hashtable<Integer,SearchAndAct> actors = new Hashtable<Integer,SearchAndAct>();
-	static class MyMessageCountListener implements MessageCountListener{
-		Hashtable<Integer,SearchAndAct> actors_ = null;
-		MyMessageCountListener(Hashtable<Integer,SearchAndAct> actors)
-		{
-			actors_ = actors;
-		}
-		@Override
-		public void messagesAdded(MessageCountEvent ev) {
-			Message[] msgs = ev.getMessages();
-			Collection<SearchAndAct> sas = actors_.values();
-			for(Message msg : msgs)
-			{
-				try {
-					for(SearchAndAct sa : sas) {
-							if(sa.msp.test(msg))
-								sa.ma.act(msg);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		@Override
-		public void messagesRemoved(MessageCountEvent arg0) {
-			return;
-		}
-		
-	}
 	public void setWriter(Writer w){writer_ = w;}
 	void write(String s)throws Exception{
 		if(writer_!=null)
@@ -123,30 +93,19 @@ public class MailManager implements MailAction {
 					mc_.sendMessage(m);
 				}
 			});
-		final Folder fol = mc_.openFolder("INBOX"); 
-		fol.addMessageCountListener(new MyMessageCountListener(actors));
-		mc_.openFolder("1", "Sent Messages");
-		this.addIterator(new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
-			@Override
-			public void act(Message message) throws Exception {
-				System.out.format("new mail from K: %s\n", message.getSubject());
-				write(String.format("new mail from K: %s\n", message.getSubject()));
-			}
-		});
+		mc_.openInboxFolder("INBOX"); 
+		mc_.openSentFolder("1", "Sent Messages");
+		mc_.addIterator(MailAccount.IteratorList.INCOMING, 
+				new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
+				@Override
+				public void act(Message message) throws Exception {
+					String line = String.format("new mail from %s: %s\n", testmail,message.getSubject());
+					System.out.print(line);
+					write(line);
+				}
+			});
 		
-		schedule(fol);
 		//reply(true);
-	}
-	private void schedule(final Folder fol)
-	{
-		Scheduler scheduler = new Scheduler();
-		scheduler.schedule("* * * * *", 
-				new Runnable() {public void run() {try {
-			fol.getMessageCount();
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		}}});
-		scheduler.start();
 	}
 	void command(String cmd, String tail) throws Exception
 	{
@@ -162,19 +121,22 @@ public class MailManager implements MailAction {
 		}
 		m.invoke(this, tail);
 	}
-	int replyActionCode_;
+	int replyActionCode_ = -1;
 	private void autoreply(String tail) {
 		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
-			replyActionCode_ = addIterator(new IsFrom(testmail),
+			mc_.addIterator(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
 					mc_.getReplyAction());
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
 		else
-			removeIterator(replyActionCode_);
+			mc_.removeIterator(MailAccount.IteratorList.INCOMING,replyActionCode_);
 	}
 	void showbody(String tail) {
+		int index = 0;
+		try { index = Integer.parseInt(tail); }
+		catch(NumberFormatException e) {}
 		//TODO
 	}
 	void reply(String tail) {
@@ -187,12 +149,12 @@ public class MailManager implements MailAction {
 		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
-			forwardActionCode_ = addIterator(new IsFrom(testmail),
+			mc_.addIterator(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
 					mc_.getForwardAction(KeyRing.getTrello()));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}
 		else
-			removeIterator(forwardActionCode_);
+			mc_.removeIterator(MailAccount.IteratorList.INCOMING,forwardActionCode_);
 	}
 	void process(String input) throws Exception
 	{
@@ -261,6 +223,7 @@ public class MailManager implements MailAction {
 			e.printStackTrace();
 			//continue;
 		}
+		write("that's all, folks!\n");
 	}
 	static String makeSubjectLine(Message m) throws Exception
 	{
@@ -297,15 +260,5 @@ public class MailManager implements MailAction {
 	@Override
 	public void act(Message message) throws Exception {
 		write(String.format("%s\n",makeSubjectLine(message)));
-	}
-	public void removeIterator(int code) {
-		actors.remove(code);
-	}
-	//TODO: into MailAccount
-	public int addIterator(MailSearchPattern msp, MailAction ma)
-	{
-		int res = new Random().nextInt();
-		actors.put(res, new SearchAndAct(msp,ma));
-		return res;
 	}
 }

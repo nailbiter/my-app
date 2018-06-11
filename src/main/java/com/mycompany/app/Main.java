@@ -99,7 +99,7 @@ public class Main{
 							sw_.sc_ = channelOnWhichMessageWasPosted;
 							System.out.format("got message: %s\n", messageContent);
 							id.process(messageContent);
-							sw_.write("that's all, folks!");
+							//sw_.write("that's all, folks!");
 						}	
 					}
 					catch(Exception e)

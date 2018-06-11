@@ -2,6 +2,7 @@ package com.mycompany.app;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
@@ -14,6 +15,8 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
+import javax.mail.event.MessageCountEvent;
+import javax.mail.event.MessageCountListener;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -21,6 +24,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.mycompany.app.MailManager.SearchAndAct;
+
+import it.sauronsoftware.cron4j.Scheduler;
 
 /**
  * 
@@ -87,19 +92,61 @@ public class MailAccount {
 			System.out.printf("%s\n",f.getName());
 		}
 	}
-	public Folder openFolder(String name) throws Exception
+	static class MyMessageCountListener implements MessageCountListener{
+		Hashtable<Integer,SearchAndAct> actors_ = null;
+		MyMessageCountListener(Hashtable<Integer,SearchAndAct> actors)
+		{
+			actors_ = actors;
+		}
+		@Override
+		public void messagesAdded(MessageCountEvent ev) {
+			Message[] msgs = ev.getMessages();
+			Collection<SearchAndAct> sas = actors_.values();
+			for(Message msg : msgs)
+			{
+				try {
+					for(SearchAndAct sa : sas) {
+							if(sa.msp.test(msg))
+								sa.ma.act(msg);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		@Override
+		public void messagesRemoved(MessageCountEvent arg0) {
+			return;
+		}
+	}
+	public void openInboxFolder(String name) throws Exception
 	{
 		Folder fol = myGetFolder(name);
 		fol.open(Folder.READ_ONLY);		
 		fols.add(fol);
-		return fol;
+		fol.addMessageCountListener(new MyMessageCountListener(actorsIncoming));
+		
+		schedule(fol);
+		
+		//return fol;
 	}
-	public Folder openFolder(String name1, String name2) throws Exception
+	private void schedule(final Folder fol)
+	{
+		Scheduler scheduler = new Scheduler();
+		scheduler.schedule("* * * * *", 
+				new Runnable() {public void run() {try {
+			fol.getMessageCount();
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}}});
+		scheduler.start();
+	}
+	public void openSentFolder(String name1, String name2) throws Exception
 	{
 		Folder fol = st.getFolder(name1).getFolder(name2);
 		fol.open(Folder.READ_ONLY);
 		fols.add(fol);
-		return fol;
+		//return fol;
 	}
 	public Folder getFolder(int index) {return fols.get(index);}
 	private Folder myGetFolder(String name) throws Exception
