@@ -10,10 +10,12 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.tidy.Tidy;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -21,6 +23,8 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Stack;
+
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Flags;
@@ -49,9 +53,10 @@ public class MailManager implements MailAction {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
-	static final String testmail = true ? KeyRing.getKMail() : KeyRing.getMyMail();
+	static final String testmail = false ? KeyRing.getKMail() : KeyRing.getMyMail();
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
+	ArrayList<Message> incoming = new ArrayList<Message>();
 	class SearchAndAct{
 		public MailSearchPattern msp;
 		public MailAction ma;
@@ -69,7 +74,7 @@ public class MailManager implements MailAction {
 		}
 	public MailManager() throws Exception{
 		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
-		mc_.addIterator(MailAccount.IteratorList.OUTCOMING,
+		mc_.addActor(MailAccount.IteratorList.OUTCOMING,
 				new MailSearchPattern() {
 				@Override
 				public boolean test(Message m) throws Exception {
@@ -95,11 +100,12 @@ public class MailManager implements MailAction {
 			});
 		mc_.openInboxFolder("INBOX"); 
 		mc_.openSentFolder("1", "Sent Messages");
-		mc_.addIterator(MailAccount.IteratorList.INCOMING, 
+		mc_.addActor(MailAccount.IteratorList.INCOMING, 
 				new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
 				@Override
 				public void act(Message message) throws Exception {
-					String line = String.format("new mail from %s: %s\n", testmail,message.getSubject());
+					incoming.add(message);
+					String line = String.format("new mail from %s!: %s\n", testmail,message.getSubject());
 					System.out.print(line);
 					write(line);
 				}
@@ -126,7 +132,7 @@ public class MailManager implements MailAction {
 		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
-			mc_.addIterator(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
+			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
 					mc_.getReplyAction());
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
@@ -140,16 +146,27 @@ public class MailManager implements MailAction {
 		//TODO
 	}
 	void reply(String tail) {
+		int num = 10;
+		try {
+			num = Integer.parseInt(tail);
+		}
+		catch(NumberFormatException e) {}
+		for(int i = 0; i < incoming.size() && i < num; i++)
+		{
+			Message m = incoming.get(incoming.size() - 1 - i);
+		}
+	}
+	void listreplies(String tail) {
 		//TODO
 	}
-	void replylist(String tail) {
+	void listmails(String tail) {
 		//TODO
 	}
-	void forward(String tail) {
+	void autoforward(String tail) {
 		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
-			mc_.addIterator(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
+			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
 					mc_.getForwardAction(KeyRing.getTrello()));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}
@@ -164,43 +181,20 @@ public class MailManager implements MailAction {
 			command(opt[0].substring(1),opt[1]);
 			return;
 		}
-		Scanner scanner = new Scanner(System.in).useDelimiter("\\n");
 		String ename;
 		JSONObject obj = null;
 		SearchStruct ss = null;
 
 		obj = new JSONObject();
 		curDate = new Date();
-		//System.out.print("> ");
-		//ename = scanner.next();
 		ename = input;
 		System.out.println("\tgot: "+ename);
-		/*if(ename.equals("exit"))
-		  break;*/
 		try{
 			String[] fs = ename.split(" ");
-			if(fs[0].equals("ktalk"))
-			{
-				String[] s = fs[1].split(":");
-				obj	.put("hours",Integer.parseInt(s[0]))
-					.put("mins",Integer.parseInt(s[1]));
-				if(fs.length>=2)
-					obj.put("diff",Integer.parseInt(fs[2]));
-				write( String.format("ktalk; %s %d, %02d:%02d;\n",
-					MailManager.months[curDate.getMonth()],curDate.getDate()+obj.optInt("diff",0),
-					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
+			if(this.processAux(fs, "ktalk", "ktalk"))
 				return;
-			}
-			if(fs[0].equals("skype"))
-			{
-				String[] s = fs[1].split(":");
-				obj	.put("hours",Integer.parseInt(s[0]))
-					.put("mins",Integer.parseInt(s[1]));
-				write( String.format("skypeCall; %s %d, %02d:%02d;\n",
-					MailManager.months[curDate.getMonth()],curDate.getDate(),
-					obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
+			if(this.processAux(fs, "skype", "skypeCall"))
 				return;
-			}
 			String[] s = fs[0].split(":");
 			if(fs.length >= 2){
 				//month/day
@@ -221,9 +215,23 @@ public class MailManager implements MailAction {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			//continue;
 		}
 		write("that's all, folks!\n");
+	}
+	boolean processAux(String[] fs,String what, String to) throws JSONException, Exception
+	{
+		JSONObject obj = new JSONObject();
+		if(fs[0].equals(what))
+		{
+			String[] s = fs[1].split(":");
+			obj	.put("hours",Integer.parseInt(s[0]))
+				.put("mins",Integer.parseInt(s[1]));
+			write( String.format("%s; %s %d, %02d:%02d;\n",to,
+				MailManager.months[curDate.getMonth()],curDate.getDate(),
+				obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
+			return true;
+		}
+		return false;
 	}
 	static String makeSubjectLine(Message m) throws Exception
 	{
@@ -259,6 +267,6 @@ public class MailManager implements MailAction {
 	}
 	@Override
 	public void act(Message message) throws Exception {
-		write(String.format("%s\n",makeSubjectLine(message)));
+		write(String.format("`%s`\n",makeSubjectLine(message)));
 	}
 }

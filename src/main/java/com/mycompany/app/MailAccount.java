@@ -302,7 +302,7 @@ public class MailAccount {
 				break;
 		}
 	}
-	public int addIterator(IteratorList il,MailSearchPattern msp, MailAction ma)
+	public int addActor(IteratorList il,MailSearchPattern msp, MailAction ma)
 	{
 		int res = new Random().nextInt();
 		switch(il) {
