@@ -8,6 +8,11 @@
   <name>my-app</name>
   <url>http://maven.apache.org</url>
   <dependencies>
+   <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    	<version>3.0</version>
+    </dependency>
 	<!-- https://mvnrepository.com/artifact/it.sauronsoftware.cron4j/cron4j -->
 	<dependency>
 	    <groupId>it.sauronsoftware.cron4j</groupId>

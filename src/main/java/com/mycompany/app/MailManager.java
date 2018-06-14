@@ -101,7 +101,7 @@ public class MailManager implements MailAction {
 		mc_.openInboxFolder("INBOX"); 
 		mc_.openSentFolder("1", "Sent Messages");
 		mc_.addActor(MailAccount.IteratorList.INCOMING, 
-				new IsFrom(true?KeyRing.getKMail():KeyRing.getGmail()), new MailAction() {
+				new IsFrom(testmail/*true?KeyRing.getKMail():KeyRing.getGmail()*/), new MailAction() {
 				@Override
 				public void act(Message message) throws Exception {
 					incoming.add(message);
@@ -125,7 +125,12 @@ public class MailManager implements MailAction {
 			write(String.format("no method %s\n", cmd));
 			return;
 		}
-		m.invoke(this, tail);
+		try {
+			m.invoke(this, tail);
+		}
+		catch(InvocationTargetException e) {
+			write(String.format("te: %s", e.getCause().getMessage()));
+		}
 	}
 	int replyActionCode_ = -1;
 	private void autoreply(String tail) {
@@ -146,21 +151,37 @@ public class MailManager implements MailAction {
 		//TODO
 	}
 	void reply(String tail) {
+		//TODO
+	}
+	void listreplies(String tail) {
+		//TODO
+	}
+	public void listmails(String tail) throws Exception {
 		int num = 10;
 		try {
 			num = Integer.parseInt(tail);
 		}
 		catch(NumberFormatException e) {}
+		TableBuilder tb = new TableBuilder()
+				.newRow()
+				.addToken("#")
+				.addToken("date")
+				.addToken("subject");
 		for(int i = 0; i < incoming.size() && i < num; i++)
 		{
+			tb.newRow();
 			Message m = incoming.get(incoming.size() - 1 - i);
+			tb.addToken(i);
+			Date rd = m.getReceivedDate();
+			if(rd == null) rd = new Date();
+			tb.addToken(String.format("%s %d, %02d:%02d",
+					months[rd.getMonth()],
+					rd.getDate(),
+					rd.getHours(),
+					rd.getMinutes()));
+			tb.addToken(m.getSubject());
 		}
-	}
-	void listreplies(String tail) {
-		//TODO
-	}
-	void listmails(String tail) {
-		//TODO
+		write(tb.toString("`", "`"));
 	}
 	void autoforward(String tail) {
 		boolean flag = Boolean.parseBoolean(tail);

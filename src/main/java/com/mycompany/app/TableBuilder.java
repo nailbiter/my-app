@@ -83,16 +83,22 @@ public class TableBuilder {
 	@Override
 	public String toString()
 	{
+		return this.toString("","");
+	}
+	public String toString(String prefix, String suffix)
+	{
 		for(int i = 0;i < lengths.size(); i++)
 			System.out.print(lengths.get(i)+" ");
 		System.out.println("");
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < tokens.size(); i++)
 		{
+			sb.append(prefix);
 			for(int j = 0; j < tokens.get(i).size(); j++)
 			{
 				sb.append(StringUtils.rightPad(tokens.get(i).get(j), lengths.get(j) + OFFSET));
 			}
+			sb.append(suffix);
 			sb.append("\n");
 		}
 		
