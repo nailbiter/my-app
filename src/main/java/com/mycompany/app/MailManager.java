@@ -288,6 +288,6 @@ public class MailManager implements MailAction {
 	}
 	@Override
 	public void act(Message message) throws Exception {
-		write(String.format("`%s`\n",makeSubjectLine(message)));
+		write(String.format("%s\n",makeSubjectLine(message)));
 	}
 }
