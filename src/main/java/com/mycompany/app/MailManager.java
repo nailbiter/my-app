@@ -53,7 +53,7 @@ public class MailManager implements MailAction {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
-	static final String testmail = false ? KeyRing.getKMail() : KeyRing.getMyMail();
+	static final String testmail = true ? KeyRing.getKMail() : KeyRing.getMyMail();
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
 	ArrayList<Message> incoming = new ArrayList<Message>();
