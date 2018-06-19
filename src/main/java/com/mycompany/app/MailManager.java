@@ -49,10 +49,6 @@ import it.sauronsoftware.cron4j.Scheduler;
 public class MailManager implements MailAction {
 	static Date curDate = null;
 	private MailAccount mc_ = null;
-	static final String[] months = {
-		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
-		"Sep","Oct","Nov","Dec"
-	};
 	static String testmail;
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
@@ -95,7 +91,7 @@ public class MailManager implements MailAction {
 				@Override
 				public void act(Message message) throws Exception {
 					Message m = mc_.createForward(message, KeyRing.getKmailsTrello());
-					m.setSubject(makeSubjectLine(message));
+					m.setSubject(MailUtil.makeSubjectLine(message));
 					mc_.sendMessage(m);
 				}
 			});
@@ -151,10 +147,24 @@ public class MailManager implements MailAction {
 		catch(NumberFormatException e) {}
 		//TODO
 	}
-	void reply(String tail) {
-		//TODO
+	/*
+	 * [message] [reply num]
+	 */
+	public void reply(String tail) throws Exception{
+		String[] parts = tail.split(" ");
+		int messageNum = 0, replyNum = 0;
+		try {
+		if(parts.length >= 1)
+			messageNum = Integer.parseInt(parts[0]);
+		if(parts.length >= 2)
+			replyNum = Integer.parseInt(parts[1]);
+		}
+		catch(NumberFormatException nfe) {}
+		
+		Message m = this.incoming.get(this.incoming.size() - messageNum - 1);
+		this.mc_.getReplyAction().act(m);
 	}
-	void listreplies(String tail) {
+	public void listreplies(String tail) {
 		//TODO
 	}
 	public void listmails(String tail) throws Exception {
@@ -176,7 +186,7 @@ public class MailManager implements MailAction {
 			Date rd = m.getReceivedDate();
 			if(rd == null) rd = new Date();
 			tb.addToken(String.format("%s %d, %02d:%02d",
-					months[rd.getMonth()],
+					MailUtil.months[rd.getMonth()],
 					rd.getDate(),
 					rd.getHours(),
 					rd.getMinutes()));
@@ -251,46 +261,14 @@ public class MailManager implements MailAction {
 			obj	.put("hours",Integer.parseInt(s[0]))
 				.put("mins",Integer.parseInt(s[1]));
 			write( String.format("%s; %s %d, %02d:%02d;\n",to,
-				MailManager.months[curDate.getMonth()],curDate.getDate(),
+				MailUtil.months[curDate.getMonth()],curDate.getDate(),
 				obj.getInt("hours"),obj.getInt("mins")));//FIXME: replace with call to makeSubjectLine
 			return true;
 		}
 		return false;
 	}
-	static String makeSubjectLine(Message m) throws Exception
-	{
-		Date rd = m.getReceivedDate();
-		if(rd == null) rd = new Date();
-		String res =
-			(isFrom(m,KeyRing.getKMail())?"fromK":"")+
-			"; "+
-			months[rd.getMonth()]+" "+rd.getDate()+", "+
-			String.format("%02d:%02d",rd.getHours(),rd.getMinutes())+
-			"; "+trimmedSubject(m.getSubject());
-		return res;
-	}
-	static boolean isFrom(Message m,String tmail) throws Exception
-	{
-		Address[] senders = m.getFrom();
-		for(int i = 0; i < senders.length; i++)
-		{
-			if(senders[i].toString().contains(tmail))
-				return true;
-		}
-		return false;
-	}
-	static String trimmedSubject(String subject)
-	{
-		String res=subject, tmp;
-		do{
-			subject = res;
-			res = subject.replaceFirst("^Re: *","").replaceFirst("^Fwd: *","");
-		}
-		while(!res.equals(subject));
-		return res;
-	}
 	@Override
 	public void act(Message message) throws Exception {
-		write(String.format("%s\n",makeSubjectLine(message)));
+		write(String.format("%s\n",MailUtil.makeSubjectLine(message)));
 	}
 }
