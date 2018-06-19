@@ -112,7 +112,7 @@ public class MailManager implements MailAction {
 				}
 			});
 		
-		//reply(true);
+		autoforward("true");
 	}
 	void command(String cmd, String tail) throws Exception
 	{
@@ -186,6 +186,8 @@ public class MailManager implements MailAction {
 	}
 	void autoforward(String tail) {
 		boolean flag = Boolean.parseBoolean(tail);
+		System.out.println("set autoforward "+flag);
+		
 		if(flag)
 		{
 			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
