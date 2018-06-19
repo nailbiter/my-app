@@ -53,7 +53,7 @@ public class MailManager implements MailAction {
 		"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug",
 		"Sep","Oct","Nov","Dec"
 	};
-	static final String testmail = true ? KeyRing.getKMail() : KeyRing.getMyMail();
+	static String testmail;
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
 	ArrayList<Message> incoming = new ArrayList<Message>();
@@ -72,7 +72,8 @@ public class MailManager implements MailAction {
 		else
 			System.out.format("wanted to write \"%s\", but couldn't\n",s);
 		}
-	public MailManager() throws Exception{
+	public MailManager(String testmail_in) throws Exception{
+		testmail = testmail_in;
 		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
 		mc_.addActor(MailAccount.IteratorList.OUTCOMING,
 				new MailSearchPattern() {
@@ -101,7 +102,7 @@ public class MailManager implements MailAction {
 		mc_.openInboxFolder("INBOX"); 
 		mc_.openSentFolder("1", "Sent Messages");
 		mc_.addActor(MailAccount.IteratorList.INCOMING, 
-				new IsFrom(testmail/*true?KeyRing.getKMail():KeyRing.getGmail()*/), new MailAction() {
+				new IsFrom(testmail), new MailAction() {
 				@Override
 				public void act(Message message) throws Exception {
 					incoming.add(message);

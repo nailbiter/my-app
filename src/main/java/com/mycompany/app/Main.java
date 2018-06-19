@@ -1,6 +1,7 @@
 package com.mycompany.app;
 
 import java.util.Date;
+import gnu.getopt.Getopt;
 import java.util.Date;
 import org.json.JSONObject;
 import java.util.Properties;
@@ -65,8 +66,19 @@ public class Main{
 	}
 	public static void main(String[] args) throws Exception
 	{
+		Getopt g = new Getopt("testprog", args, "k");
+		boolean kflag = false;
+		int c = 0;
+		while ((c = g.getopt()) != -1) {
+			if(c=='k')
+			{
+				//System.out.format("arg: %s",g.getOptarg());
+				kflag = true;
+				System.out.format("set kflag=true\n");
+			}
+		}
 		
-		id = new MailManager();
+		id = new MailManager( kflag? KeyRing.getKMail() : KeyRing.getMyMail());
 		id.setWriter(sw_= new SlackWriter());
 		String token = KeyRing.getBotWebToken();
 		session = SlackSessionFactory.createWebSocketSlackSession(token);
