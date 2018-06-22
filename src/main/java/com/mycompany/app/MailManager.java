@@ -133,7 +133,7 @@ public class MailManager implements MailAction {
 		else
 			mc_.removeIterator(MailAccount.IteratorList.INCOMING,replyActionCode_);
 	}
-	void showbody(String tail) throws Exception{
+	public void showbody(String tail) throws Exception{
 		int messageNum = 0;
 		try { messageNum = Integer.parseInt(tail); }
 		catch(NumberFormatException e) {}
