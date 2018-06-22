@@ -6,7 +6,7 @@ SRCs=MailManager Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount\
      MailSearchPattern MailAction IsFrom TableBuilder MailUtil
 MAINCLASS=Main
 # -k = kobayashi
-KEYS=-k
+KEYS=
 SRCs_all=$(SRCs) KeyRing
 
 
