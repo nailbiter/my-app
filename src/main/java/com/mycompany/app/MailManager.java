@@ -256,6 +256,8 @@ public class MailManager implements MailAction {
 			obj	.put("hours",Integer.parseInt(s[0]))
 				.put("mins",Integer.parseInt(s[1]));
 			System.out.printf("\t%s\n",obj.toString());
+			if(!testmail_.equals(KeyRing.getMyMail()))
+				obj.put("mail", testmail_);
 			ss = new SearchStruct(obj);
 			mc_.iterateThroughAllMessages(ss, this);
 		}
