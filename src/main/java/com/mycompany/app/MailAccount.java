@@ -36,6 +36,7 @@ public class MailAccount {
 	private Session sess;
 	private Store st;
 	private ArrayList<Folder> fols = new ArrayList<Folder>();
+	private sentFolder_ = null;
 	private String address_;
 	public class ForwardAction implements MailAction{
 		private String to_ = null; 
@@ -43,7 +44,7 @@ public class MailAccount {
 		@Override
 		public void act(Message message) throws Exception {
 			Message forward = createForward(message,to_);
-            sendMessage(forward);
+            		sendMessage(forward);
 		}
 	}
 	public Message createForward(Message message, String to_) throws AddressException, MessagingException
@@ -51,36 +52,35 @@ public class MailAccount {
 		Message forward = new MimeMessage(sess);
 		forward.setRecipients(Message.RecipientType.TO,
 				InternetAddress.parse(to_));
-        forward.setSubject("Fwd: " + message.getSubject());
-        forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
-        
-     // Create the message part
-        MimeBodyPart messageBodyPart = new MimeBodyPart();
-        // Create a multipart message
-        Multipart multipart = new MimeMultipart();
-        // set content
-        messageBodyPart.setContent(message, "message/rfc822");
-        // Add part to multi part
-        multipart.addBodyPart(messageBodyPart);
-        // Associate multi-part with message
-        forward.setContent(multipart);
-        forward.saveChanges();
-        return forward;
+		forward.setSubject("Fwd: " + message.getSubject());
+		forward.setFrom(new InternetAddress(KeyRing.getMyMail()));
+		
+	     	// Create the message part
+		MimeBodyPart messageBodyPart = new MimeBodyPart();
+		// Create a multipart message
+		Multipart multipart = new MimeMultipart();
+		// set content
+		messageBodyPart.setContent(message, "message/rfc822");
+		// Add part to multi part
+		multipart.addBodyPart(messageBodyPart);
+		// Associate multi-part with message
+		forward.setContent(multipart);
+		forward.saveChanges();
+		return forward;
 	}
 
-	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException
-	{
+	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException{
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", host);
 		props.put("mail.debug", "false");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.user", user);
-        props.put("mail.smtp.password",password);
-        props.put("mail.smtp.starttls.enable","true");
-        props.put("mail.smtp.EnableSSL.enable","true");
-        SmtpAuthenticator authentication = new SmtpAuthenticator(user,password);
-        props.put("mail.smtp.port", 587);
-	    sess = Session.getInstance(props, authentication);
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.user", user);
+		props.put("mail.smtp.password",password);
+		props.put("mail.smtp.starttls.enable","true");
+		props.put("mail.smtp.EnableSSL.enable","true");
+		SmtpAuthenticator authentication = new SmtpAuthenticator(user,password);
+		props.put("mail.smtp.port", 587);
+	    	sess = Session.getInstance(props, authentication);
 		address_ = address;
 
 		st = sess.getStore("imaps");
@@ -141,7 +141,8 @@ public class MailAccount {
 	public void openSentFolder(String name1, String name2) throws Exception
 	{
 		Folder fol = st.getFolder(name1).getFolder(name2);
-		fol.open(Folder.READ_ONLY);
+		fol.open(Folder.READ_WRITE);
+		sentFolder_ = fol;
 		fols.add(fol);
 		//return fol;
 	}
@@ -271,9 +272,9 @@ public class MailAccount {
 	}
 	public void sendMessage(Message m) throws Exception
 	{
+		Transport.send(m);
 		for(SearchAndAct sa : actorsOutcoming.values())
 			if(sa.msp.test(m))
 				sa.ma.act(m);
-		Transport.send(m);
 	}
 }
