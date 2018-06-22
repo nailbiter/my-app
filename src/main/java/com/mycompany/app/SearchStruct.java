@@ -57,7 +57,7 @@ class SearchStruct implements MailSearchPattern{
     		date_==sd.getDate()&&
     		month_==sd.getMonth();
     if(mail_!=null)
-    		res = res && (MailUtil.isFrom(m, mail_) || MailUtil.isFrom(m, mail_));
+    		res = res && (MailUtil.isFrom(m, mail_) || MailUtil.isTo(m, mail_));
     
     return res;
   }
