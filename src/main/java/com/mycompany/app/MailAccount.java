@@ -88,6 +88,7 @@ public class MailAccount {
 		for(Folder f : st.getFolder("1").list()){
 			System.out.printf("%s\n",f.getName());
 		}
+		this.addActor(IteratorList.OUTCOMING,
 	}
 	static class MyMessageCountListener implements MessageCountListener{
 		Hashtable<Integer,SearchAndAct> actors_ = null;
