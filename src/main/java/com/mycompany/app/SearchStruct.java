@@ -36,18 +36,14 @@ class SearchStruct implements MailSearchPattern{
   protected Date curDate = null;
   protected int mins_,
   hours_,month_,date_;
-  /*
-  if(sd.getMinutes()==obj.getInt("mins") &&
-    sd.getHours()==obj.getInt("hours") &&
-    (obj.optInt("day",curDate.getDate())+obj.optInt("diff",0))==sd.getDate()&&
-    obj.optInt("month",curDate.getMonth())==sd.getMonth())
-  */
+  String mail_ = null;
   SearchStruct(JSONObject obj) throws Exception{
     curDate = new Date();
     mins_ = obj.getInt("mins");
     hours_ = obj.getInt("hours");
     date_ = (obj.optInt("day",curDate.getDate())+obj.optInt("diff",0));
     month_ = obj.optInt("month",curDate.getMonth());
+    mail_ = obj.optString("mail");
   }
   public boolean test(Message m) throws Exception
   {
@@ -56,9 +52,13 @@ class SearchStruct implements MailSearchPattern{
 			sd = m.getSentDate();
 		else
 			sd = m.getReceivedDate();
-      return (sd.getMinutes()==mins_ &&
-        sd.getHours()==hours_ &&
-        date_==sd.getDate()&&
-        month_==sd.getMonth());
+    boolean res = sd.getMinutes()==mins_ &&
+    		sd.getHours()==hours_ &&
+    		date_==sd.getDate()&&
+    		month_==sd.getMonth();
+    if(mail_!=null)
+    		res = res && (MailUtil.isFrom(m, mail_) || MailUtil.isFrom(m, mail_));
+    
+    return res;
   }
 }

@@ -49,18 +49,10 @@ import it.sauronsoftware.cron4j.Scheduler;
 public class MailManager implements MailAction {
 	static Date curDate = null;
 	private MailAccount mc_ = null;
-	static String testmail;
+	private String testmail_;
 	private int forwardActionCode_ = -1;
 	Writer writer_ = null;
 	ArrayList<Message> incoming = new ArrayList<Message>();
-	class SearchAndAct{
-		public MailSearchPattern msp;
-		public MailAction ma;
-		SearchAndAct(MailSearchPattern Msp, MailAction Ma){
-			msp = Msp;
-			ma = Ma;
-		}
-	}
 	public void setWriter(Writer w){writer_ = w;}
 	void write(String s)throws Exception{
 		if(writer_!=null)
@@ -69,14 +61,14 @@ public class MailManager implements MailAction {
 			System.out.format("wanted to write \"%s\", but couldn't\n",s);
 		}
 	public MailManager(String testmail_in) throws Exception{
-		testmail = testmail_in;
+		testmail_ = testmail_in;
 		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
 		mc_.addActor(MailAccount.IteratorList.OUTCOMING,
 				new MailSearchPattern() {
 				@Override
 				public boolean test(Message m) throws Exception {
 					Address[] recipients = m.getAllRecipients();
-					final String tmail = testmail; 
+					final String tmail = testmail_; 
 					for(int i = 0; i < recipients.length; i++)
 					{
 						if(recipients[i].toString().contains(tmail))
@@ -98,11 +90,11 @@ public class MailManager implements MailAction {
 		mc_.openInboxFolder("INBOX"); 
 		mc_.openSentFolder("1", "Sent Messages");
 		mc_.addActor(MailAccount.IteratorList.INCOMING, 
-				new IsFrom(testmail), new MailAction() {
+				new IsFrom(testmail_), new MailAction() {
 				@Override
 				public void act(Message message) throws Exception {
 					incoming.add(message);
-					String line = String.format("new mail from %s!: %s\n", testmail,message.getSubject());
+					String line = String.format("new mail from %s!: %s\n", testmail_,message.getSubject());
 					System.out.print(line);
 					write(line);
 				}
@@ -134,18 +126,38 @@ public class MailManager implements MailAction {
 		boolean flag = Boolean.parseBoolean(tail);
 		if(flag)
 		{
-			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
+			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail_),
 					mc_.getReplyAction());
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
 		else
 			mc_.removeIterator(MailAccount.IteratorList.INCOMING,replyActionCode_);
 	}
-	void showbody(String tail) {
-		int index = 0;
-		try { index = Integer.parseInt(tail); }
+	void showbody(String tail) throws Exception{
+		int messageNum = 0;
+		try { messageNum = Integer.parseInt(tail); }
 		catch(NumberFormatException e) {}
-		//TODO
+		Message msg = this.incoming.get(this.incoming.size() - messageNum - 1);
+		
+		String text = "";
+		try{
+ 			//String replyText = "";
+ 			Object content = msg.getContent();
+ 			
+ 			if(content instanceof String)
+ 				text = (String)content;
+ 			if(content instanceof Multipart)
+ 				text = MailUtil.getText(((Multipart)msg.getContent()).getBodyPart(0));
+ 			
+ 			//replyText = text.replaceAll("(?m)^", "> ");
+ 		}
+ 		catch(Exception e)
+ 		{
+ 			e.printStackTrace(System.out);
+ 		}
+ 		/*System.out.println("before the end");
+ 		replyMessage.setText(body + "\n" + replyText);*/
+		write(text);
 	}
 	/*
 	 * [message] [reply num]
@@ -194,13 +206,13 @@ public class MailManager implements MailAction {
 		}
 		write(tb.toString("`", "`"));
 	}
-	void autoforward(String tail) {
+	public void autoforward(String tail) {
 		boolean flag = Boolean.parseBoolean(tail);
 		System.out.println("set autoforward "+flag);
 		
 		if(flag)
 		{
-			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail),
+			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail_),
 					mc_.getForwardAction(KeyRing.getTrello()));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}

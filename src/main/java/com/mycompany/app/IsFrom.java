@@ -16,21 +16,9 @@ public class IsFrom implements MailSearchPattern {
 	@Override
 	public boolean test(Message m) throws Exception {
 		if(onlyNew_)
-			return !isSeen(m.getFlags()) && isFrom(m,email_);
+			return !isSeen(m.getFlags()) && MailUtil.isFrom(m,email_);
 		else
-			return isFrom(m,email_);
-	}
-	static boolean isFrom(Message m,String tmail) throws Exception
-	{
-		//logger_.info(String.format("compare subj=%s, tmail=%s", m.getSubject(),tmail));
-		Address[] senders = m.getFrom();
-		for(int i = 0; i < senders.length; i++)
-		{
-			//logger_.info(String.format("\tsender=%s", senders[i].toString()));
-			if(senders[i].toString().contains(tmail))
-				return true;
-		}
-		return false;
+			return MailUtil.isFrom(m,email_);
 	}
 	static boolean isSeen(Flags flags)
 	{

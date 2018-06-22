@@ -23,8 +23,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.mycompany.app.MailManager.SearchAndAct;
-
 import it.sauronsoftware.cron4j.Scheduler;
 
 /**
@@ -47,7 +45,6 @@ public class MailAccount {
 			Message forward = createForward(message,to_);
             sendMessage(forward);
 		}
-	
 	}
 	public Message createForward(Message message, String to_) throws AddressException, MessagingException
 	{
@@ -220,7 +217,7 @@ public class MailAccount {
      			if(content instanceof String)
      				text = (String)content;
      			if(content instanceof Multipart)
-     				text = getText(((Multipart)msg.getContent()).getBodyPart(0));
+     				text = MailUtil.getText(((Multipart)msg.getContent()).getBodyPart(0));
      			
      			replyText = text.replaceAll("(?m)^", "> ");
      		}
@@ -233,50 +230,7 @@ public class MailAccount {
      		sendMessage(replyMessage);
 		}
 	}
-	private boolean textIsHtml = false;
-
-    /**
-     * Return the primary text content of the message.
-     */
-    private String getText(Part p) throws
-                MessagingException, IOException {
-        if (p.isMimeType("text/*")) {
-            String s = (String)p.getContent();
-            textIsHtml = p.isMimeType("text/html");
-            return s;
-        }
-
-        if (p.isMimeType("multipart/alternative")) {
-            // prefer html text over plain text
-            Multipart mp = (Multipart)p.getContent();
-            String text = null;
-            for (int i = 0; i < mp.getCount(); i++) {
-                Part bp = mp.getBodyPart(i);
-                if (bp.isMimeType("text/plain")) {
-                    if (text == null)
-                        text = getText(bp);
-                    continue;
-                } else if (bp.isMimeType("text/html")) {
-                    String s = getText(bp);
-                    if (s != null)
-                        return s;
-                } else {
-                    return getText(bp);
-                }
-            }
-            return text;
-        } else if (p.isMimeType("multipart/*")) {
-            Multipart mp = (Multipart)p.getContent();
-            for (int i = 0; i < mp.getCount(); i++) {
-                String s = getText(mp.getBodyPart(i));
-                if (s != null)
-                    return s;
-            }
-        }
-
-        return null;
-    }
-	public MailAction getReplyAction() {
+		public MailAction getReplyAction() {
 		return new ReplyAction();
 	}
 	class SearchAndAct{
