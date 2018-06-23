@@ -240,7 +240,7 @@ public class MailManager implements MailAction {
 		if(flag)
 		{
 			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail_),
-					mc_.getForwardAction(KeyRing.getTrello()));
+					mc_.getForwardAction(KeyRing.getTrello(),false));
 			System.out.format("forwardCode = %d\n",forwardActionCode_);
 		}
 		else

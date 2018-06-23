@@ -42,11 +42,16 @@ public class MailAccount {
 	private Scheduler scheduler_;
 	public class ForwardAction implements MailAction{
 		private String to_ = null; 
-		ForwardAction(String to){ to_ = to;}
+		private boolean asAttachment_;
+		ForwardAction(String to, boolean asAttachment){ to_ = to; asAttachment_ = asAttachment;}
 		@Override
 		public void act(Message message) throws Exception {
-			Message forward = createForward(message,to_);
-            		sendMessage(forward);
+			if(asAttachment_)
+            		sendMessage(createForward(message,to_));
+			else {
+				Message r = MailAccount.this.getReplyMessage("", message);
+				r.setRecipient(Message.RecipientType.TO, new InternetAddress(to_));
+			}
 		}
 	}
 	public Message createForward(Message message, String to_) throws AddressException, MessagingException
@@ -172,12 +177,6 @@ public class MailAccount {
 			System.out.printf("%s is not exist.\n", name);
 		return res;
 	}
-	/**
-	 * FIXME: maybe, it should be taken away from this class, as it is too complicated for it
-	 * @param msp
-	 * @param ma
-	 * @throws MessagingException
-	 */
 	public void iterateThroughAllMessages(MailSearchPattern msp, MailAction ma) throws MessagingException {
 		for(int i = 0; i < fols.size(); i++){
 			Folder fol = fols.get(i);
@@ -197,35 +196,38 @@ public class MailAccount {
 			}
 		}
 	}
-	public ForwardAction getForwardAction(String to)
+	public ForwardAction getForwardAction(String to, boolean asAttachment)
 	{
-		return new ForwardAction(to);
+		return new ForwardAction(to,asAttachment);
 	}
-		public void reply(String body, Message msg) throws Exception {
-			System.out.println("here reply goes!");
-			Message replyMessage = new MimeMessage(sess);
-     		replyMessage = (MimeMessage) msg.reply(false);
-     		replyMessage.setFrom(new InternetAddress(address_));
-     		String replyText = "";
-     		try{
-     			String text = "";
-     			Object content = msg.getContent();
-     			
-     			if(content instanceof String)
-     				text = (String)content;
-     			if(content instanceof Multipart)
-     				text = MailUtil.getText(((Multipart)msg.getContent()).getBodyPart(0));
-     			
-     			replyText = text.replaceAll("(?m)^", "> ");
-     		}
-     		catch(Exception e)
-     		{
-     			e.printStackTrace(System.out);
-     		}
-     		System.out.println("before the end");
-     		replyMessage.setText(body + "\n" + replyText);
-     		sendMessage(replyMessage);
-		}
+	protected Message getReplyMessage(String body, Message msg) throws Exception{
+		Message replyMessage = new MimeMessage(sess);
+ 		replyMessage = (MimeMessage) msg.reply(false);
+ 		replyMessage.setFrom(new InternetAddress(address_));
+ 		String replyText = "";
+ 		try{
+ 			String text = "";
+ 			Object content = msg.getContent();
+ 			
+ 			if(content instanceof String)
+ 				text = (String)content;
+ 			if(content instanceof Multipart)
+ 				text = MailUtil.getText(((Multipart)msg.getContent()).getBodyPart(0));
+ 			
+ 			replyText = text.replaceAll("(?m)^", "> ");
+ 		}
+ 		catch(Exception e)
+ 		{
+ 			e.printStackTrace(System.out);
+ 		}
+ 		System.out.println("before the end");
+ 		replyMessage.setText(body + "\n" + replyText);
+ 		return replyMessage;
+	}
+	public void reply(String body, Message msg) throws Exception {
+		System.out.println("here reply goes!");
+ 		sendMessage(this.getReplyMessage(body, msg));
+	}
 	class SearchAndAct{
 		public MailSearchPattern msp;
 		public MailAction ma;
