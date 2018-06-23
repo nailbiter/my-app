@@ -7,6 +7,9 @@ import it.sauronsoftware.cron4j.Scheduler;
 
 import java.util.Date;
 import org.json.JSONObject;
+import org.jtwig.JtwigModel;
+import org.jtwig.JtwigTemplate;
+
 import java.util.Properties;
 import java.util.Properties;
 import java.util.Scanner;
@@ -96,6 +99,11 @@ public class Main{
 			for(String name : names) {
 				System.out.format("template: %s\n", name);
 			}
+			
+			String name = names.get(0);
+			JtwigTemplate template = StorageManager.getTemplate(name);
+			template.render(JtwigModel.newModel(), System.out);
+			
 			return;
 		}
 		
