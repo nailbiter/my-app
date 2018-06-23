@@ -98,7 +98,7 @@ public class Main{
 		
 		Scheduler scheduler = new Scheduler();
 		StorageManager.init(templateFolder, scheduler);
-		if(!true) {
+		if(!false) {
 			ArrayList<String> names =  StorageManager.getMailTemplateNames();
 			for(String name : names) {
 				System.out.format("template: %s\n", name);
@@ -114,6 +114,7 @@ public class Main{
 	        root.put("latestProduct", latest);*/
 	        Writer out = new OutputStreamWriter(System.out);
 	        temp.process(root, out);
+	        Map temp.getMacros();
 //			template.render(JtwigModel.newModel(), System.out);
 			
 			return;
