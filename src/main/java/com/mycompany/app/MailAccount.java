@@ -7,6 +7,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Random;
 
+import javax.mail.Flags.Flag;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -36,8 +37,8 @@ public class MailAccount {
 	private Session sess;
 	private Store st;
 	private ArrayList<Folder> fols = new ArrayList<Folder>();
-	private sentFolder_ = null;
 	private String address_;
+	private Folder sentFolder_ = null;
 	public class ForwardAction implements MailAction{
 		private String to_ = null; 
 		ForwardAction(String to){ to_ = to;}
@@ -88,7 +89,17 @@ public class MailAccount {
 		for(Folder f : st.getFolder("1").list()){
 			System.out.printf("%s\n",f.getName());
 		}
-		this.addActor(IteratorList.OUTCOMING,
+		this.addActor(IteratorList.OUTCOMING,MailSearchPatternFactory.getTrivialPattern(),
+				new MailAction() {
+					@Override
+					public void act(Message message) throws Exception {
+						saveToSentFolder(message);
+					}
+		});	
+	}
+	void saveToSentFolder(Message m) throws MessagingException {
+		m.setFlag(Flag.SEEN, true);
+		this.sentFolder_.appendMessages(new Message[] {m});
 	}
 	static class MyMessageCountListener implements MessageCountListener{
 		Hashtable<Integer,SearchAndAct> actors_ = null;

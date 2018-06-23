@@ -3,10 +3,10 @@
 JARNAME=my-app-1.0-SNAPSHOT-jar-with-dependencies.jar
 SRCDIR=src/main/java/com/mycompany/app/
 SRCs=MailManager Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount\
-     MailSearchPattern MailAction IsFrom TableBuilder MailUtil
+     MailSearchPattern MailAction IsFrom TableBuilder MailUtil MailSearchPatternFactory
 MAINCLASS=Main
 # -k = kobayashi
-KEYS=-k
+KEYS=
 SRCs_all=$(SRCs) KeyRing
 
 
