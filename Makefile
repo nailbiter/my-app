@@ -8,7 +8,7 @@ SRCs=MailManager Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount\
 MAINCLASS=Main
 # -k = kobayashi
 # -t <templates> = location of templates folder
-KEYS=-t data
+KEYS=-k -t data
 SRCs_all=$(SRCs) KeyRing
 
 
