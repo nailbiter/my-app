@@ -11,14 +11,13 @@
    <dependency>
     	<groupId>org.apache.commons</groupId>
     	<artifactId>commons-lang3</artifactId>
-    	<version>3.0</version>
+    	<version>3.6</version>
     </dependency>
 	<!-- https://mvnrepository.com/artifact/org.jtwig/jtwig-core -->
 	<dependency>
 	    <groupId>org.jtwig</groupId>
 	    <artifactId>jtwig-core</artifactId>
 	    <version>5.87.0.RELEASE</version>
-	    <scope>runtime</scope>
 	</dependency>
 	<!-- https://mvnrepository.com/artifact/it.sauronsoftware.cron4j/cron4j -->
 	<dependency>
