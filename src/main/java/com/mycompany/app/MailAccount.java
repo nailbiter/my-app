@@ -39,6 +39,7 @@ public class MailAccount {
 	private ArrayList<Folder> fols = new ArrayList<Folder>();
 	private String address_;
 	private Folder sentFolder_ = null;
+	private Scheduler scheduler_;
 	public class ForwardAction implements MailAction{
 		private String to_ = null; 
 		ForwardAction(String to){ to_ = to;}
@@ -70,7 +71,8 @@ public class MailAccount {
 		return forward;
 	}
 
-	public MailAccount(String host, String user, String password, int port,String address) throws MessagingException{
+	public MailAccount(String host, String user, String password, int port,String address,Scheduler scheduler) throws MessagingException{
+		scheduler_ = scheduler;
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", host);
 		props.put("mail.debug", "false");
@@ -141,14 +143,12 @@ public class MailAccount {
 	}
 	private void schedule(final Folder fol)
 	{
-		Scheduler scheduler = new Scheduler();
-		scheduler.schedule("* * * * *", 
+		scheduler_.schedule("* * * * *", 
 				new Runnable() {public void run() {try {
 			fol.getMessageCount();
 		} catch (MessagingException e) {
 			e.printStackTrace();
 		}}});
-		scheduler.start();
 	}
 	public void openSentFolder(String name1, String name2) throws Exception
 	{

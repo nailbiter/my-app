@@ -60,9 +60,10 @@ public class MailManager implements MailAction {
 		else
 			System.out.format("wanted to write \"%s\", but couldn't\n",s);
 		}
-	public MailManager(String testmail_in) throws Exception{
+	public MailManager(String testmail_in, Scheduler scheduler) throws Exception{
 		testmail_ = testmail_in;
-		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail());
+		mc_ = new MailAccount(KeyRing.getHost(),KeyRing.getUser(),KeyRing.getPassword(),993,KeyRing.getMyMail(),
+				scheduler);
 		mc_.addActor(MailAccount.IteratorList.OUTCOMING,
 				new MailSearchPattern() {
 				@Override

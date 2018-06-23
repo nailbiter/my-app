@@ -1,7 +1,10 @@
 package com.mycompany.app;
 
+import java.util.ArrayList;
 import java.util.Date;
 import gnu.getopt.Getopt;
+import it.sauronsoftware.cron4j.Scheduler;
+
 import java.util.Date;
 import org.json.JSONObject;
 import java.util.Properties;
@@ -66,9 +69,10 @@ public class Main{
 	}
 	public static void main(String[] args) throws Exception
 	{
-		Getopt g = new Getopt("testprog", args, "k");
+		Getopt g = new Getopt("testprog", args, "kt:");
 		boolean kflag = false;
 		int c = 0;
+		String templateFolder = null;
 		while ((c = g.getopt()) != -1) {
 			if(c=='k')
 			{
@@ -76,10 +80,30 @@ public class Main{
 				kflag = true;
 				System.out.format("set kflag=true\n");
 			}
+			if(c=='t')
+			{
+				templateFolder = g.getOptarg();
+				System.out.format("template folder: %s\n",templateFolder);
+			}
+		}
+		if(templateFolder == null)
+			throw new Exception("templateFolder == null");
+		
+		Scheduler scheduler = new Scheduler();
+		StorageManager.init(templateFolder, scheduler);
+		if(!false) {
+			ArrayList<String> names =  StorageManager.getMailTemplateNames();
+			for(String name : names) {
+				System.out.format("template: %s\n", name);
+			}
+			return;
 		}
 		
-		id = new MailManager( kflag? KeyRing.getKMail() : KeyRing.getMyMail());
+		id = new MailManager( kflag? KeyRing.getKMail() : KeyRing.getMyMail(), scheduler);
 		id.setWriter(sw_= new SlackWriter());
+		
+		scheduler.start();
+		
 		String token = KeyRing.getBotWebToken();
 		session = SlackSessionFactory.createWebSocketSlackSession(token);
 		session.connect();
@@ -121,11 +145,6 @@ public class Main{
 					}
 				}
 		};
-		//add it to the session
 		session.addMessagePostedListener(messagePostedListener);
-		//session.sendMessage(session.findChannelByName("general"),"hi");
-
-		//that's it, the listener will get every message post events the bot can get notified on
-		//(IE: the messages sent on channels it joined or sent directly to it)
 	}
 }

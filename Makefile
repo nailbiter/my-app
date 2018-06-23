@@ -3,10 +3,12 @@
 JARNAME=my-app-1.0-SNAPSHOT-jar-with-dependencies.jar
 SRCDIR=src/main/java/com/mycompany/app/
 SRCs=MailManager Main SearchStruct ForwardEmail SmtpAuthenticator MailAccount\
-     MailSearchPattern MailAction IsFrom TableBuilder MailUtil MailSearchPatternFactory
+     MailSearchPattern MailAction IsFrom TableBuilder MailUtil MailSearchPatternFactory\
+     StorageManager MyManager Replier
 MAINCLASS=Main
 # -k = kobayashi
-KEYS=
+# -t <templates> = location of templates folder
+KEYS=-t data
 SRCs_all=$(SRCs) KeyRing
 
 
