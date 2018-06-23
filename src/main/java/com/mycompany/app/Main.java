@@ -7,9 +7,6 @@ import it.sauronsoftware.cron4j.Scheduler;
 
 import java.util.Date;
 import org.json.JSONObject;
-import org.jtwig.JtwigModel;
-import org.jtwig.JtwigTemplate;
-
 import java.util.Properties;
 import java.util.Properties;
 import java.util.Scanner;
@@ -44,6 +41,9 @@ import com.ullink.slack.simpleslackapi.SlackSession;
 import com.ullink.slack.simpleslackapi.SlackUser;
 import com.ullink.slack.simpleslackapi.events.SlackMessagePosted;
 import com.ullink.slack.simpleslackapi.listeners.SlackMessagePostedListener;
+
+import freemarker.template.Template;
+
 import java.io.Writer;
 
 
@@ -101,8 +101,8 @@ public class Main{
 			}
 			
 			String name = names.get(0);
-			JtwigTemplate template = StorageManager.getTemplate(name);
-			template.render(JtwigModel.newModel(), System.out);
+			Template template = StorageManager.getTemplate(name);
+//			template.render(JtwigModel.newModel(), System.out);
 			
 			return;
 		}

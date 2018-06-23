@@ -14,8 +14,13 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.jtwig.JtwigTemplate;
 
+import freemarker.core.ParseException;
+import freemarker.template.Configuration;
+import freemarker.template.MalformedTemplateNameException;
+import freemarker.template.Template;
+import freemarker.template.TemplateExceptionHandler;
+import freemarker.template.TemplateNotFoundException;
 import it.sauronsoftware.cron4j.Scheduler;
 
 public class StorageManager {
@@ -25,9 +30,19 @@ public class StorageManager {
 	protected static MyManager myManager = null;
 	public static MyManager getMyManager() {return myManager;}
 	protected static Scheduler scheduler_ = null;
+	private static Configuration cfg;
+	protected static void setUpTemplates() throws IOException {
+        cfg = new Configuration(Configuration.VERSION_2_3_27);
+        cfg.setDirectoryForTemplateLoading(new File(jarFolder_));
+        cfg.setDefaultEncoding("UTF-8");
+        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        cfg.setLogTemplateExceptions(false);
+        cfg.setWrapUncheckedExceptions(true);
+	}
 	public static void init(String jarFolder, Scheduler scheduler) throws Exception
 	{
 		jarFolder_ = jarFolder;
+		setUpTemplates();
 		myManager = new MyManager()
 		{
 			@Override
@@ -86,9 +101,10 @@ public class StorageManager {
 		});
 		//scheduler_.start();
 	}
-	static JtwigTemplate getTemplate(String name) {
-		
-		return JtwigTemplate.classpathTemplate(String.format("%s/%s.twig", jarFolder_,name));
+	protected static final String TEMPLATEEXTENSION = ".ftlh" ;
+	static Template getTemplate(String name) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException {
+		//return JtwigTemplate.classpathTemplate(String.format("%s/%s%s", jarFolder_,name,TEMPLATEEXTENSION));
+		return cfg.getTemplate(name+TEMPLATEEXTENSION);
 	}
 	static ArrayList<String> getMailTemplateNames(){
 		File f = new File(jarFolder_);
@@ -96,8 +112,8 @@ public class StorageManager {
 		ArrayList<String> res = new ArrayList<String>();
 		for(File file : files) {
 			String name = file.getName(); 
-			if(name.endsWith(".twig"))
-				res.add(name.substring(0, name.length() - 5));
+			if(name.endsWith(TEMPLATEEXTENSION))
+				res.add(name.substring(0, name.length() - TEMPLATEEXTENSION.length()));
 		}
 		
 		return res;
