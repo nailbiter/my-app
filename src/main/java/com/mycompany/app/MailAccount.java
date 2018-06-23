@@ -46,11 +46,13 @@ public class MailAccount {
 		ForwardAction(String to, boolean asAttachment){ to_ = to; asAttachment_ = asAttachment;}
 		@Override
 		public void act(Message message) throws Exception {
+			//System.out.format("here on act in %s\n", this.getClass().getName());/*FIXME: remove*/
 			if(asAttachment_)
             		sendMessage(createForward(message,to_));
 			else {
 				Message r = MailAccount.this.getReplyMessage("", message);
 				r.setRecipient(Message.RecipientType.TO, new InternetAddress(to_));
+				MailAccount.this.sendMessage(r);
 			}
 		}
 	}
