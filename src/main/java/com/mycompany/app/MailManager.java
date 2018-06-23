@@ -7,12 +7,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import org.json.JSONException;
@@ -44,6 +46,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import com.lowagie.text.DocumentException;
 
+import freemarker.template.Template;
 import it.sauronsoftware.cron4j.Scheduler;
 
 public class MailManager implements MailAction {
@@ -128,7 +131,16 @@ public class MailManager implements MailAction {
 		if(flag)
 		{
 			mc_.addActor(MailAccount.IteratorList.INCOMING,new IsFrom(testmail_),
-					mc_.getReplyAction());
+					new MailAction() {
+						@Override
+						public void act(Message m) throws Exception {
+							Template temp = StorageManager.getTemplate(StorageManager.getMailTemplateNames().get(0));
+							StringWriter sw = new StringWriter();
+							temp.process(new HashMap(), sw);
+							mc_.reply(sw.toString(), m);
+						}
+				
+			});
 			System.out.format("replyActionCode_ = %d\n",replyActionCode_);
 		}
 		else
@@ -175,10 +187,24 @@ public class MailManager implements MailAction {
 		catch(NumberFormatException nfe) {}
 		
 		Message m = this.incoming.get(this.incoming.size() - messageNum - 1);
-		this.mc_.getReplyAction().act(m);
+		Template temp = StorageManager.getTemplate(StorageManager.getMailTemplateNames().get(replyNum));
+		StringWriter sw = new StringWriter();
+		temp.process(new HashMap(), sw);
+		mc_.reply(sw.toString(), m);
 	}
-	public void listreplies(String tail) {
-		//TODO
+	public void listreplies(String tail) throws Exception {
+		TableBuilder tb = new TableBuilder()
+				.newRow()
+				.addToken("#")
+				.addToken("name");
+		ArrayList<String> replyNames = StorageManager.getMailTemplateNames();
+		for( int i = 0; i < replyNames.size(); i++ )
+		{
+			tb.newRow();
+			tb.addToken(i);
+			tb.addToken(replyNames.get(i));
+		}
+		write(tb.toString("`", "`"));
 	}
 	public void listmails(String tail) throws Exception {
 		int num = 10;

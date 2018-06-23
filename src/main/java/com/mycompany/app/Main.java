@@ -2,6 +2,9 @@ package com.mycompany.app;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import gnu.getopt.Getopt;
 import it.sauronsoftware.cron4j.Scheduler;
 
@@ -44,6 +47,7 @@ import com.ullink.slack.simpleslackapi.listeners.SlackMessagePostedListener;
 
 import freemarker.template.Template;
 
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 
 
@@ -94,14 +98,22 @@ public class Main{
 		
 		Scheduler scheduler = new Scheduler();
 		StorageManager.init(templateFolder, scheduler);
-		if(!false) {
+		if(!true) {
 			ArrayList<String> names =  StorageManager.getMailTemplateNames();
 			for(String name : names) {
 				System.out.format("template: %s\n", name);
 			}
 			
 			String name = names.get(0);
-			Template template = StorageManager.getTemplate(name);
+			Template temp = StorageManager.getTemplate(name);
+			Map root = new HashMap();
+	        root.put("user", "Big Joe");
+	        /*Product latest = new Product();
+	        latest.setUrl("products/greenmouse.html");
+	        latest.setName("green mouse");
+	        root.put("latestProduct", latest);*/
+	        Writer out = new OutputStreamWriter(System.out);
+	        temp.process(root, out);
 //			template.render(JtwigModel.newModel(), System.out);
 			
 			return;

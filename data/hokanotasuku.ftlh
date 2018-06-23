@@ -1,10 +1,9 @@
-<html>
-<head>
-  <title>Welcome!</title>
-</head>
-<body>
-  <h1>Welcome ${user}!</h1>
-  <p>Our latest product:
-  <a href="${latestProduct.url}">${latestProduct.name}</a>!
-</body>
-</html>
+先生
+
+ご指導どうもありがとうございます！
+お忙しい中、貴重なお時間を取っていただき、まことに有難うございます。
+
+先生のメールを頂きました。しかし、今は他の研究タスクを致しますので、直ぐに返事ができません。
+今のタスクを終わったら、直ぐにご返事致します。大変申し訳ございません。
+
+アレックス

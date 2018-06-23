@@ -201,23 +201,7 @@ public class MailAccount {
 	{
 		return new ForwardAction(to);
 	}
-	class ReplyAction implements MailAction{
-		final String body = 
-				"先生\n" + 
-				"\n" + 
-				"ご指導どうもありがとうございます！\n" + 
-				"お忙しい中、貴重なお時間を取っていただき、まことに有難うございます。\n" + 
-				"\n" +
-				"先生のメールを頂きました。しかし、今は他の研究タスクを致しますので、直ぐに返事ができません。\n"+
-				"今のタスクを終わったら、直ぐにご返事致します。大変申し訳ございません。\n"+
-				"\n"+
-				"アレックス";
-		ReplyAction()
-		{
-			
-		}
-		@Override
-		public void act(Message msg) throws Exception {
+		public void reply(String body, Message msg) throws Exception {
 			System.out.println("here reply goes!");
 			Message replyMessage = new MimeMessage(sess);
      		replyMessage = (MimeMessage) msg.reply(false);
@@ -242,10 +226,6 @@ public class MailAccount {
      		replyMessage.setText(body + "\n" + replyText);
      		sendMessage(replyMessage);
 		}
-	}
-		public MailAction getReplyAction() {
-		return new ReplyAction();
-	}
 	class SearchAndAct{
 		public MailSearchPattern msp;
 		public MailAction ma;
