@@ -46,6 +46,7 @@ import com.ullink.slack.simpleslackapi.events.SlackMessagePosted;
 import com.ullink.slack.simpleslackapi.listeners.SlackMessagePostedListener;
 
 import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -104,8 +105,7 @@ public class Main{
 				System.out.format("template: %s\n", name);
 			}
 			
-			String name = names.get(0);
-			Template temp = StorageManager.getTemplate(name);
+			Template temp = StorageManager.getTemplate("enchou");
 			Map root = new HashMap();
 	        root.put("user", "Big Joe");
 	        /*Product latest = new Product();
@@ -113,8 +113,22 @@ public class Main{
 	        latest.setName("green mouse");
 	        root.put("latestProduct", latest);*/
 	        Writer out = new OutputStreamWriter(System.out);
-	        temp.process(root, out);
-	        Map temp.getMacros();
+	        try {
+	        		temp.process(root, out);
+	        }
+	        catch(TemplateException e) {
+	        		System.out.format("exception: %s,\n", e.getMessage());
+	        }
+	        ArrayList<String> vars = Util.getTemplateVars("enchou");
+	        System.out.format("vars:\n");
+	        for(String varname : vars) {
+	        		System.out.format("\t%s\n", varname);
+	        }
+	        /*Map vars = temp.getMacros();
+	        System.out.println("vars="+vars);
+	        System.out.println("vars.len="+vars.size());
+	        for(String s : temp.getCustomAttributeNames())
+	        		System.out.format("\t%s\n",s);*/
 //			template.render(JtwigModel.newModel(), System.out);
 			
 			return;

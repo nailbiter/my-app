@@ -196,13 +196,21 @@ public class MailManager implements MailAction {
 		TableBuilder tb = new TableBuilder()
 				.newRow()
 				.addToken("#")
-				.addToken("name");
+				.addToken("name")
+				.addToken("vars");
 		ArrayList<String> replyNames = StorageManager.getMailTemplateNames();
 		for( int i = 0; i < replyNames.size(); i++ )
 		{
 			tb.newRow();
 			tb.addToken(i);
-			tb.addToken(replyNames.get(i));
+			String name = replyNames.get(i);
+			tb.addToken(name);
+			ArrayList<String> vars = Util.getTemplateVars(name);
+			StringBuilder sb = new StringBuilder();
+			for(String varname : vars) {
+				sb.append(varname+", ");
+			}
+			tb.addToken(sb.toString());
 		}
 		write(tb.toString("`", "`"));
 	}

@@ -101,7 +101,7 @@ public class StorageManager {
 		});
 		//scheduler_.start();
 	}
-	protected static final String TEMPLATEEXTENSION = ".ftlh" ;
+	public static final String TEMPLATEEXTENSION = ".ftlh" ;
 	static Template getTemplate(String name) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException {
 		//return JtwigTemplate.classpathTemplate(String.format("%s/%s%s", jarFolder_,name,TEMPLATEEXTENSION));
 		return cfg.getTemplate(name+TEMPLATEEXTENSION);
@@ -121,7 +121,7 @@ public class StorageManager {
 	public static String getFile(String name) throws Exception
 	{
 		FileReader fr = null;
-		String fname = jarFolder_+name;
+		String fname = jarFolder_+(jarFolder_.endsWith("/")?"":"/")+name;
 		logger_.info(String.format("fname=%s", fname));
 		
 		fr = new FileReader(fname);
