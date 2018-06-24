@@ -99,7 +99,7 @@ public class Main{
 		
 		Scheduler scheduler = new Scheduler();
 		StorageManager.init(templateFolder, scheduler);
-		if(!false) {
+		if(!true) {
 			ArrayList<String> names =  StorageManager.getMailTemplateNames();
 			for(String name : names) {
 				System.out.format("template: %s\n", name);

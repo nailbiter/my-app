@@ -17,7 +17,9 @@ public class Util {
 			Pattern p = Pattern.compile("\\$\\{([^}]+)\\}");
 			Matcher m = p.matcher(src); 
 			while(m.find()) {
-				res.add(m.group(1));
+				String var = m.group(1); 
+				if( !res.contains(var) )
+					res.add(var);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -176,20 +176,32 @@ public class MailManager implements MailAction {
 	 * [message] [reply num]
 	 */
 	public void reply(String tail) throws Exception{
-		String[] parts = tail.split(" ");
+		String[] parts = tail.split(" ",3);
+		String substitutions = null;
 		int messageNum = 0, replyNum = 0;
 		try {
-		if(parts.length >= 1)
-			messageNum = Integer.parseInt(parts[0]);
-		if(parts.length >= 2)
-			replyNum = Integer.parseInt(parts[1]);
+			if(parts.length >= 1)
+				messageNum = Integer.parseInt(parts[0]);
+			if(parts.length >= 2)
+				replyNum = Integer.parseInt(parts[1]);
+			if(parts.length >= 3)
+				substitutions = parts[2];
 		}
 		catch(NumberFormatException nfe) {}
 		
 		Message m = this.incoming.get(this.incoming.size() - messageNum - 1);
-		Template temp = StorageManager.getTemplate(StorageManager.getMailTemplateNames().get(replyNum));
+		String replyName = StorageManager.getMailTemplateNames().get(replyNum);
+		Template temp = StorageManager.getTemplate(replyName);
 		StringWriter sw = new StringWriter();
-		temp.process(new HashMap(), sw);
+		HashMap<String,String> hm = new HashMap<String,String>();
+		if(substitutions!=null) {
+			ArrayList<String> varnames = Util.getTemplateVars(replyName);
+			String[] values = substitutions.split(" ",varnames.size());
+			for(int i = 0; i < varnames.size(); i++)
+				hm.put(varnames.get(i), values[i]);
+		}
+		
+		temp.process(hm, sw);
 		mc_.reply(sw.toString(), m);
 	}
 	public void listreplies(String tail) throws Exception {
