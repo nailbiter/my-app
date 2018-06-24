@@ -98,7 +98,8 @@ public class MailManager implements MailAction {
 				@Override
 				public void act(Message message) throws Exception {
 					incoming.add(message);
-					String line = String.format("new mail from %s!: %s\n", testmail_,message.getSubject());
+					String line = String.format("new mail from %s!: %s\n`%s`\n", 
+							testmail_,message.getSubject(),MailUtil.makeSubjectLine(message));
 					System.out.print(line);
 					write(line);
 				}

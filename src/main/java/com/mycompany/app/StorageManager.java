@@ -41,7 +41,7 @@ public class StorageManager {
 	}
 	public static void init(String jarFolder, Scheduler scheduler) throws Exception
 	{
-		jarFolder_ = jarFolder;
+		jarFolder_ = jarFolder + (jarFolder.endsWith("/")?"":"/");
 		setUpTemplates();
 		myManager = new MyManager()
 		{
