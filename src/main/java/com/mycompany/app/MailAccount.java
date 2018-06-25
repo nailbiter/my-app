@@ -31,7 +31,6 @@ import it.sauronsoftware.cron4j.Scheduler;
  * @author nailbiter
  * This classes manages single email account.
  * It hides implementation details and provides useful low-level methods.
- * FIXME: change name?
  */
 public class MailAccount {
 	private Session sess;

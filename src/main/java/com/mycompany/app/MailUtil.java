@@ -3,8 +3,12 @@
  */
 package com.mycompany.app;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Random;
 
 import javax.mail.Address;
 import javax.mail.Message;
@@ -35,7 +39,8 @@ public class MailUtil {
 	}
 	static boolean isTo(Message m,String tmail) throws Exception
 	{
-		Address[] receivers = m.getRecipients(Message.RecipientType.TO);
+		//Address[] receivers = m.getRecipients(Message.RecipientType.TO);
+		Address[] receivers = m.getAllRecipients();
 		for(int i = 0; i < receivers.length; i++)
 		{
 			if(receivers[i].toString().contains(tmail))
@@ -105,5 +110,22 @@ public class MailUtil {
         }
 
         return null;
+    }
+    static String EMLFOLDER="emls";
+    static Random rand = new Random();
+    static int HASHLEN = 10;
+    static String RANDSYMBOLS = "ABCDEFGHIJKLMNOPQRSTUWXYZ"+"abcdefghijklmnopqrstuwxyz"+"0123456789";
+    static void saveMessageToFile(Message message) throws Exception {
+    		StringBuilder sb = new StringBuilder();
+    		for(int i = 0; i < HASHLEN; i++)
+    			sb.append(RANDSYMBOLS.charAt(rand.nextInt(RANDSYMBOLS.length())));
+    		String fileNameBase = EMLFOLDER + "/" + sb.toString();
+    		OutputStream out = new FileOutputStream(fileNameBase+".eml");
+    		message.writeTo(out);
+    		out.close();
+
+    		PrintWriter out2 = new PrintWriter(fileNameBase+".txt");
+    		out2.print(MailUtil.makeSubjectLine(message));
+    		out2.close();
     }
 }

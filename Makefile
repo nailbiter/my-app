@@ -13,7 +13,7 @@ SRCs_all=$(SRCs) KeyRing
 
 
 all: target/$(JARNAME)
-	java -cp target/$(JARNAME) com.mycompany.app.$(MAINCLASS) $(KEYS)
+	java -cp target/$(JARNAME) com.mycompany.app.$(MAINCLASS) $(KEYS) 2>&1 | tee log.txt
 commit:
 	git add $(addprefix $(SRCDIR),$(addsuffix .java,$(SRCs)))
 	git commit -a

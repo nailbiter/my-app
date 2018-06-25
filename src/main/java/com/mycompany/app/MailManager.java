@@ -70,25 +70,15 @@ public class MailManager implements MailAction {
 		mc_.addActor(MailAccount.IteratorList.OUTCOMING,
 				new MailSearchPattern() {
 				@Override
-				public boolean test(Message m) throws Exception {
-					Address[] recipients = m.getAllRecipients();
-					final String tmail = testmail_; 
-					for(int i = 0; i < recipients.length; i++)
-					{
-						if(recipients[i].toString().contains(tmail))
-							return true;
-					}
-					return false;
-				}
-			}, 
+				public boolean test(Message m) throws Exception {return MailUtil.isTo(m, testmail_);}}, 
 			new MailAction()
 			{
-
 				@Override
 				public void act(Message message) throws Exception {
 					Message m = mc_.createForward(message, KeyRing.getKmailsTrello());
 					m.setSubject(MailUtil.makeSubjectLine(message));
 					mc_.sendMessage(m);
+					//FIXME: save .eml and autoforward
 				}
 			});
 		mc_.openInboxFolder("INBOX"); 
@@ -98,14 +88,18 @@ public class MailManager implements MailAction {
 				@Override
 				public void act(Message message) throws Exception {
 					incoming.add(message);
+					
 					String line = String.format("new mail from %s!: %s\n", 
 							testmail_,message.getSubject());
 					System.out.print(line);
 					write(line);
 					write(MailUtil.makeSubjectLine(message)+"\n");
+					
+					MailUtil.saveMessageToFile(message);
 				}
 			});
 		
+		//FIXME: remove it
 		autoforward("true");
 	}
 	void command(String cmd, String tail) throws Exception
