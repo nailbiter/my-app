@@ -6,3 +6,4 @@ src/main/java/com/mycompany/app/KeyRing.java
 .project
 *.swp
 *.swo
+log.txt
