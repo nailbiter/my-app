@@ -116,6 +116,7 @@ public class MailUtil {
     static int HASHLEN = 10;
     static String RANDSYMBOLS = "ABCDEFGHIJKLMNOPQRSTUWXYZ"+"abcdefghijklmnopqrstuwxyz"+"0123456789";
     static void saveMessageToFile(Message message) throws Exception {
+    		System.out.format("going to save %s!\n",MailUtil.makeSubjectLine(message));
     		StringBuilder sb = new StringBuilder();
     		for(int i = 0; i < HASHLEN; i++)
     			sb.append(RANDSYMBOLS.charAt(rand.nextInt(RANDSYMBOLS.length())));
