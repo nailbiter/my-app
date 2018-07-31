@@ -7,3 +7,4 @@ src/main/java/com/mycompany/app/KeyRing.java
 *.swp
 *.swo
 log.txt
+emls
