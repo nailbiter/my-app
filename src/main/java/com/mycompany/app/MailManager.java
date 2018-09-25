@@ -156,15 +156,12 @@ public class MailManager implements MailAction {
 		
 		String text = "";
 		try{
- 			//String replyText = "";
  			Object content = msg.getContent();
  			
  			if(content instanceof String)
  				text = (String)content;
  			if(content instanceof Multipart)
  				text = MailUtil.getText(((Multipart)msg.getContent()).getBodyPart(0));
- 			
- 			//replyText = text.replaceAll("(?m)^", "> ");
  		}
  		catch(Exception e)
  		{

@@ -77,14 +77,13 @@ public class Main{
 	}
 	public static void main(String[] args) throws Exception
 	{
-		Getopt g = new Getopt("testprog", args, "kt:");
+		Getopt g = new Getopt("testprog", args, "kt:m:");
 		boolean kflag = false;
 		int c = 0;
 		String templateFolder = null;
 		while ((c = g.getopt()) != -1) {
 			if(c=='k')
 			{
-				//System.out.format("arg: %s",g.getOptarg());
 				kflag = true;
 				System.out.format("set kflag=true\n");
 			}
@@ -92,6 +91,11 @@ public class Main{
 			{
 				templateFolder = g.getOptarg();
 				System.out.format("template folder: %s\n",templateFolder);
+			}
+			if(c=='m') {
+				ProcessAndSendMail pasm = new ProcessAndSendMail(g.getOptarg());
+				pasm.send();
+				return;
 			}
 		}
 		if(templateFolder == null)
